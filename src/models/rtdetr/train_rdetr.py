@@ -19,7 +19,7 @@ def train(model):
     )
 
 def train_all_models():
-    models = ['rtdetr-x.pt']
+    models = ['rtdetr-l.pt', 'rtdetr-x.pt']
     for model in models:
         train(model)
         #except: print(f'Error on model {model}')
