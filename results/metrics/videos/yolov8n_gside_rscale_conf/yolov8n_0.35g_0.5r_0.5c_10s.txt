@@ -1,0 +1,15 @@
+MAE: 7.9523809523809526
+MAPE: 3.3413365346138457
+MSE: 116.85714285714286
+MEAN: 233.14285714285714
+STD: 9.657396446374612
+
+real_count: 238
+grid_scale: 0.35
+resize_scale: 0.5
+confiance: 0.5
+data_augmentation: False
+total_frames: 417.0
+skip_frames: 10
+
+video_path: ..\..\data\datasets\videos\dourado\238_20221213_072235.mp4

@@ -1,0 +1,15 @@
+MAE: 20.727272727272727
+MAPE: 8.934169278996864
+MSE: 762.7272727272727
+MEAN: 224.72727272727272
+STD: 26.642723410788953
+
+real_count: 232
+grid_scale: 0.35
+resize_scale: 0.5
+confiance: 0.5
+data_augmentation: False
+total_frames: 619.0
+skip_frames: 60
+
+video_path: ..\..\data\datasets\videos\dourado\232_20221213_074012.mp4
