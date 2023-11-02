@@ -1,3 +1,4 @@
 data/*
+!data/datasets/.gitkeep
+!data/models/.gitkeep
 **/__pycache__/*
-!**/.gitkeep
