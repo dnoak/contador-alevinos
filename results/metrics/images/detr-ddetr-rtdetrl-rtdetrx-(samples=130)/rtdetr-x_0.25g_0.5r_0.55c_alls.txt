@@ -1,0 +1,12 @@
+MAE: 14.13076923076923
+MAPE: 23.928063141385973
+RMSE: 26.609859364239703
+grid_scale: 0.25
+resize_scale: 0.5
+confiance: 0.55
+
+random_seed: 1011
+data_augmentation: False
+samples: all
+total_pred: 12722
+total_real: 11073

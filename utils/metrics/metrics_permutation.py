@@ -19,16 +19,16 @@ import threading
 
 args = {
     'model_name': ['detr-resnet-50', 'deformable-detr', 'rtdetr-l', 'rtdetr-x'],
-    'grid_scale': [0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
+    'grid_scale': [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
     'resize_scale': [0.5],
-    'confiance': [0.2, 0.3, 0.5, 0.75, 0.8, 0.85, 0.9],
+    'confiance': [0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85],
     'data_augmentation': [False],
     'random_seed': [1011],
-    'samples': [13],
+    'samples': ['all'],
     'images_folder': [r'..\..\data\datasets\train\yolov8_originalres_train=130_val=0\train\images'],
     'annotations_folder': [r'..\..\data\datasets\train\yolov8_originalres_train=130_val=0\train\labels'],
     'show_image': [False],
-    'save_path':[r'../../results/metrics/images/detr-ddetr-rtdetrl-rtdetrx-(samples=13)'],
+    'save_path':[r'../../results/metrics/images/detr-ddetr-rtdetrl-rtdetrx-(samples=130)'],
     'verbose': [False],
 }
 
@@ -225,5 +225,3 @@ if __name__ == '__main__':
         n_workers=16,
         args=args,
     ).start()
-
-
