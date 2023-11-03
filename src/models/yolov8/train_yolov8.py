@@ -1,9 +1,5 @@
 from ultralytics import YOLO
-import cv2
-from glob import glob
 from datetime import datetime
-import numpy as np
-import sys; sys.path.insert(0, r'D:\Documentos\Projetos\tcc\contagem-ovos-larvas-peixe\utils')
 
 project_path = r'D:/Documentos/Projetos/tcc/contagem-ovos-larvas-peixe/'
 

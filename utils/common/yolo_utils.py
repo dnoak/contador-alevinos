@@ -1,9 +1,11 @@
+import sys
+sys.path.append('../..')
+from utils.common.image_utils import Image, Intersection
 import json
 from glob import glob
 import math
 import cv2
 from pathlib import Path
-from image_utils import Image, Intersection
 
 class YoloAnnotation:
     def __init__(self):

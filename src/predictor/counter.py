@@ -2,9 +2,13 @@ import sys
 sys.path.append('../..')
 from utils.common.image_utils import Image as im
 import torch
-from tqdm import tqdm
 from ultralytics import YOLO, RTDETR
-from transformers import DetrForObjectDetection, DetrImageProcessor
+from transformers import (
+    DetrForObjectDetection,
+    DetrImageProcessor,
+    DeformableDetrForObjectDetection,
+    DeformableDetrImageProcessor
+)
 import cv2
 import numpy as np
 from pathlib import Path
@@ -20,12 +24,45 @@ class ModelsPaths():
         'yolov8x': r'../../data/models/yolov8/yolov8s.pt',    
     }
     detr = {
-        'detr': r'../../data/models/detr/detr_640x640_1749train_400val',
+        'detr-resnet-50': r'../../data/models/detr/detr-resnet-50',
+    }
+    deformable_detr = {
+        'deformable-detr': r'../../data/models/deformable-detr/deformable-detr',
     }
     rtdetr = {
         'rtdetr-l': r'../../data/models/rtdetr/rtdetr-l.pt',
         'rtdetr-x': r'../../data/models/rtdetr/rtdetr-x.pt',
     }
+
+@dataclass
+class Yolov8Model():
+    yolov8_name: str
+    model: YOLO = None
+    device: str = '0' if torch.cuda.is_available() else 'cpu'
+    
+    def __post_init__(self):
+        if self.yolov8_name not in ModelsPaths.yolov8.keys():
+            raise Exception(f"Model '{self.yolov8_name}' not found.")
+        self.yolo_path = ModelsPaths.yolov8[self.yolov8_name]
+        assert Path(self.yolo_path).exists()
+        self.model = YOLO(self.yolo_path)
+
+    def predict(self, image, confiance):
+        results = self.model.predict(
+            source=image, 
+            conf=confiance,
+            show=False, 
+            verbose=False,
+            device=self.device)
+        return results
+    
+    def get_xyxy_boxes(self, predicted):
+        boxes = predicted[0].boxes
+        xyxy_boxes = []
+        for box in boxes:
+            xyxy = box.xyxy[0].cpu().numpy()
+            xyxy_boxes.append(list(map(int, xyxy)))
+        return xyxy_boxes
 
 @dataclass
 class RTDetrModel():
@@ -58,49 +95,19 @@ class RTDetrModel():
         return xyxy_boxes
 
 @dataclass
-class Yolov8Model():
-    yolo_name: str
-    model: YOLO = None
-    device: str = '0' if torch.cuda.is_available() else 'cpu'
-    
-    def __post_init__(self):
-        if self.yolo_name not in ModelsPaths.yolov8.keys():
-            raise Exception(f"Model '{self.yolo_name}' not found.")
-        self.yolo_path = ModelsPaths.yolov8[self.yolo_name]
-        assert Path(self.yolo_path).exists()
-        self.model = YOLO(self.yolo_path)
-
-    def predict(self, image, confiance):
-        results = self.model.predict(
-            source=image, 
-            conf=confiance,
-            show=False, 
-            verbose=False,
-            device=self.device)
-        return results
-    
-    def get_xyxy_boxes(self, predicted):
-        boxes = predicted[0].boxes
-        xyxy_boxes = []
-        for box in boxes:
-            xyxy = box.xyxy[0].cpu().numpy()
-            xyxy_boxes.append(list(map(int, xyxy)))
-        return xyxy_boxes
-    
-@dataclass
 class DetrModel:
     detr_name: str
     model: DetrForObjectDetection = None
     device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def __post_init__(self):
-        if self.detr_name not in ModelsPaths.__dict__.keys():
+        if self.detr_name not in ModelsPaths.detr.keys():
             raise Exception(f"Model '{self.detr_name}' not found.")
         self.detr_path = ModelsPaths.detr[self.detr_name]
         assert Path(self.detr_path).exists()
         self.model = DetrForObjectDetection.from_pretrained(
             self.detr_path).to(self.device)
-        
+    
     def predict(self, image, confiance):
         pretrained_model_name = "facebook/detr-resnet-50"
         image_processor = DetrImageProcessor.from_pretrained(pretrained_model_name)
@@ -119,15 +126,48 @@ class DetrModel:
         return xyxy_boxes
 
 @dataclass
+class DeformableDetrModel:
+    deformable_detr_name: str
+    model: DeformableDetrForObjectDetection = None
+    device: str = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    def __post_init__(self):
+        if self.deformable_detr_name not in ModelsPaths.deformable_detr.keys():
+            raise Exception(f"Model '{self.deformable_detr_name}' not found.")
+        self.deformable_detr_path = ModelsPaths.deformable_detr[self.deformable_detr_name]
+        assert Path(self.deformable_detr_path).exists()
+        self.model = DeformableDetrForObjectDetection.from_pretrained(
+            self.deformable_detr_path).to(self.device)
+    
+    def predict(self, image, confiance):
+        pretrained_model_name = "SenseTime/deformable-detr"
+        image_processor = DeformableDetrImageProcessor.from_pretrained(pretrained_model_name)
+        with torch.no_grad():
+            inputs = image_processor(images=image, return_tensors='pt').to(self.device)
+            outputs = self.model(**inputs)
+            results = image_processor.post_process_object_detection(
+                outputs=outputs, 
+                threshold=confiance, 
+                target_sizes=torch.tensor([image.shape[:2]]).to(self.device))
+            return results
+        
+    def get_xyxy_boxes(self, predicted):
+        xyxy_boxes = predicted[0]['boxes'].to('cpu').detach().numpy()
+        xyxy_boxes = list(map(lambda x: list(map(int, x)), xyxy_boxes))
+        return xyxy_boxes
+
+@dataclass
 class Model():
     name: str
     def __post_init__(self):
         if self.name in ModelsPaths.yolov8.keys():
             self.model = Yolov8Model(self.name)
-        elif self.name in ModelsPaths.detr.keys():
-            self.model = DetrModel(self.name)
         elif self.name in ModelsPaths.rtdetr.keys():
             self.model = RTDetrModel(self.name)
+        elif self.name in ModelsPaths.detr.keys():
+            self.model = DetrModel(self.name)
+        elif self.name in ModelsPaths.deformable_detr.keys():
+            self.model = DeformableDetrModel(self.name)
         else:
             raise Exception(f"Model '{self.name}' not found.")
 

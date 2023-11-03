@@ -1,5 +1,4 @@
 from ultralytics import RTDETR
-from glob import glob
 from datetime import datetime
 
 def train(model):
