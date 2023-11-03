@@ -18,17 +18,17 @@ from tqdm import tqdm
 import threading
 
 args = {
-    'model_name': ['detr'],
-    'grid_scale': [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
+    'model_name': ['detr-resnet-50', 'deformable-detr', 'rtdetr-l', 'rtdetr-x'],
+    'grid_scale': [0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
     'resize_scale': [0.5],
-    'confiance': [0.7, 0.75, 0.8, 0.85, 0.9],
+    'confiance': [0.2, 0.3, 0.5, 0.75, 0.8, 0.85, 0.9],
     'data_augmentation': [False],
     'random_seed': [1011],
-    'samples': [10],
-    'images_folder': [r'data\YOLO_original_dataset\imagens_novas\images'],
-    'annotations_folder': [r'data\YOLO_original_dataset\imagens_novas\labels'],
+    'samples': [13],
+    'images_folder': [r'..\..\data\datasets\train\yolov8_originalres_train=130_val=0\train\images'],
+    'annotations_folder': [r'..\..\data\datasets\train\yolov8_originalres_train=130_val=0\train\labels'],
     'show_image': [False],
-    'save_path': [r'results/metrics/images/ççç'],
+    'save_path':[r'../../results/metrics/images/detr-ddetr-rtdetrl-rtdetrx-(samples=13)'],
     'verbose': [False],
 }
 
@@ -47,7 +47,7 @@ class MetricsComparison:
     confiance: float
     data_augmentation: bool
     random_seed: int
-    samples: int | 'all'
+    samples: int | str
     images_folder: str
     annotations_folder: str
     show_image: bool
@@ -129,6 +129,7 @@ class MetricsComparison:
 
             if self.verbose:
                 print(f"{'-'*20}")
+                print(f"Model: {self.model_name}")
                 print(f"MAE:  {result_MAE:.2f}  | acc: {np.mean(MAE):.2f}")
                 print(f"MAPE: {result_MAPE:.2f}% | acc: {np.mean(MAPE):.2f}%")
                 print(f"MSE:  {result_MSE:.2f}  | acc: {np.sqrt(np.mean(MSE)):.2f}")
@@ -171,13 +172,14 @@ class MetricsComparisonPool:
                 try:
                     comparator = MetricsComparison(**args)
                 except Exception as e:
-                    print(f"Error: {e}")
-                    print("Args:")
+                    print(f"{'#'*15} ERROR ON ARGS: {'#'*15}")
                     for key, value in args.items():
                         print(f"{key}: {value}")
+                    raise e
             else:
                 comparator.set(args)
             comparator.generate_metrics()
+
             t1 = default_timer()
             with threading.Lock():
                 self.timers_list.append(t1 - t0)

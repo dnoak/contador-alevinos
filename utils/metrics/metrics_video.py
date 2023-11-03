@@ -1,10 +1,10 @@
-import os
-from pathlib import Path
-from random import random
 import sys
 sys.path.append('../..')
 from utils.common.image_utils import Image as im
 from src.predictor.counter import VideoCounterModel
+import os
+from pathlib import Path
+from random import random
 import cv2
 from glob import glob
 import numpy as np

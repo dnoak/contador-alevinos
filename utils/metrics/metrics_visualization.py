@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp2d
 
-metrics_paths = glob(r'results\detr_gside_gscale_conf\*')
+metrics_paths = glob(r'..\..\results\detr_gside_gscale_conf\*')
 #metrics_paths = list(filter(lambda x: 'yolov8n' in x, metrics_paths))
 
 mae_list = []
