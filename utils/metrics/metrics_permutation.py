@@ -1,4 +1,7 @@
 import sys
+
+from matplotlib import pyplot as plt
+from scipy import stats
 sys.path.append('../..')
 from utils.common.image_utils import Image as im
 from utils.common.yolo_utils import YoloAnnotation
@@ -14,23 +17,37 @@ from timeit import default_timer
 import cv2
 from glob import glob
 import numpy as np
-from tqdm import tqdm
 import threading
 
+train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images'
+train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
+test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
+test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
+
 args = {
-    'model_name': ['detr-resnet-50', 'deformable-detr', 'rtdetr-l', 'rtdetr-x'],
-    'grid_scale': [0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5],
+    'model_name': ['yolov8n'],
+    'grid_scale': [0.4],
     'resize_scale': [0.5],
-    'confiance': [0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85],
-    'data_augmentation': [False],
+    'confiance': [0.5],
+    'data_augmentation': [True],
     'random_seed': [1011],
     'samples': ['all'],
-    'images_folder': [r'..\..\data\datasets\train\yolov8_originalres_train=130_val=0\train\images'],
-    'annotations_folder': [r'..\..\data\datasets\train\yolov8_originalres_train=130_val=0\train\labels'],
+    'images_folder': [train_val_130_img],
+    'annotations_folder': [train_val_130_ann], 
     'show_image': [False],
-    'save_path':[r'../../results/metrics/images/detr-ddetr-rtdetrl-rtdetrx-(samples=130)'],
     'verbose': [False],
 }
+
+max_g, min_g = args['grid_scale'][-1], args['grid_scale'][0]
+max_r, min_r = args['resize_scale'][-1], args['resize_scale'][0]
+max_c, min_c = args['confiance'][-1], args['confiance'][0]
+folder_name  = f"{'_'.join(args['model_name'])}_"
+folder_name += f"(g={min_g}-{max_g})-(r={min_r}-{max_r})-(g={min_c}-{max_c})"
+folder_name += f"(samples={args['samples'][0]})-"
+folder_name += f"(seed={args['random_seed'][0]})"
+
+args['save_path'] = [False]#[rf"../../results/metrics/images/{folder_name}"]
+
 
 @contextlib.contextmanager
 def timer(message="Time"):
@@ -51,8 +68,8 @@ class MetricsComparison:
     images_folder: str
     annotations_folder: str
     show_image: bool
-    save_path: str
     verbose: bool
+    save_path: str
 
     def __post_init__(self):
         self.model = CounterModel(model_name=self.model_name)
@@ -95,13 +112,13 @@ class MetricsComparison:
             f.write(f"samples: {self.samples}\n")
             f.write(f"total_pred: {total_pred}\n")
             f.write(f"total_real: {total_real}\n")
-        
+    
     def generate_metrics(self):
         random.seed(self.random_seed)
         np.random.seed(self.random_seed)
 
         MAE, MAPE, MSE = [], [], []
-        total_pred, total_real = 0, 0
+        real, pred = [], []
         for image_path, annotation_path in self.images_and_annotations:
             image = cv2.imread(image_path)
             image = im.augment(image) if self.data_augmentation else image
@@ -124,8 +141,8 @@ class MetricsComparison:
             MAE.append(result_MAE)
             MAPE.append(result_MAPE)
             MSE.append(result_MSE)
-            total_pred += result['total_count']
-            total_real += len(annotations)
+            pred.append(result['total_count'])
+            real.append(len(annotations))
 
             if self.verbose:
                 print(f"{'-'*20}")
@@ -142,9 +159,11 @@ class MetricsComparison:
             if self.show_image:
                 image_annotated = im.base64_to_numpy(result['annotated_image'])
                 im.show(image_annotated)
-        
+
+        x, y = zip(*sorted(zip(real, MAPE), key=lambda x: x[0]))
+
         if self.save_path:
-            self.save_metrics(MAE, MAPE, MSE, total_pred, total_real)
+            self.save_metrics(MAE, MAPE, MSE, sum(pred), sum(real))
 
 @dataclass
 class MetricsComparisonPool:
@@ -186,21 +205,18 @@ class MetricsComparisonPool:
                 self.remaining_args -= 1
 
     def log(self):
-        last_update = self.remaining_args
         while self.args_permuted:
-            current_update = self.remaining_args
-            if last_update == current_update:
-                time.sleep(0.1)
-                continue
-            last_update = current_update
-            elapsed_time = default_timer() - self.start_time
-            average_time = np.mean(self.timers_list) / self.n_workers
-            remaing_time = average_time * self.remaining_args
-            
-            print(f"Comparisons: {self.total_args - self.remaining_args}/{self.total_args}")
-            print(f"Average time: {average_time:.2f}s")
-            print(f"Elapsed time: {datetime.timedelta(seconds=elapsed_time)}")
-            print(f"Remaining time: {datetime.timedelta(seconds=remaing_time)}\n")
+            try:
+                elapsed_time = datetime.timedelta(seconds=default_timer()-self.start_time)
+                average_time = np.mean(self.timers_list) / self.n_workers
+                remaing_time = datetime.timedelta(seconds=average_time*self.remaining_args)
+                print(f"Comparisons: {self.total_args - self.remaining_args}/{self.total_args}")
+                print(f"Average time: {average_time:.2f}s")
+                print(f"Elapsed time: {elapsed_time:.2f}")
+                print(f"Remaining time: {remaing_time:.2f}\n")
+            except:
+                print(f"Waiting ...")
+            time.sleep(1)
 
     def start_no_threaded(self):
         threading.Thread(target=self.log).start()

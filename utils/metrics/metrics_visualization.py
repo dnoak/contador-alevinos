@@ -6,16 +6,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp2d
 
-model_name = 'deformable-detr'
+metrics_paths = glob(r'..\..\results\metrics\images\rtdetr-l-(0.4-0.7)g-(0.5-0.5)r-(0.15-0.35)c-(samples=5)(seed=1011)\*')
+model_name = 'rtdetr-l'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1
 MAPE_weight = 1
 RMSE_weight = 1
+
+save = False
 img_show = True
 img_resize_scale = 1
+save_path = False #"../../results/best_params/from_train_dataset"
 
-metrics_paths = glob(r'..\..\results\metrics\images\detr-ddetr-rtdetrl-rtdetrx-(samples=130)\*')
+
 metrics_paths = list(filter(lambda x: model_name in x, metrics_paths))
 # metrics_paths = list(filter(lambda x: '0.2c' not in x, metrics_paths))
 # metrics_paths = list(filter(lambda x: '0.3c' not in x, metrics_paths))
@@ -60,29 +64,30 @@ z_mape_norm = (z_mape - np.min(z_mape)) / (np.ptp(z_mape))
 z_rmse = (interp2d(x, y,get_list_from_dict(metrics_dict, 'rmse') )(x_coords, y_coords))
 z_rmse_norm = (z_rmse - np.min(z_rmse)) / (np.ptp(z_rmse))
 
-best_generalization_coords = np.unravel_index(
+best_all_metrics_coords = np.unravel_index(
     np.argmin(z_mae_norm*MAE_weight + z_mape_norm*MAPE_weight + z_rmse_norm*RMSE_weight),
     z_mae_norm.shape
 )
-print(f"\nbest_generalization_xy: {best_generalization_coords}")
-best_generalization_x = sorted(list(set(x)))[best_generalization_coords[1]]
-best_generalization_y = sorted(list(set(y)))[best_generalization_coords[0]]
-print(f"best {x_axis}: {best_generalization_x}")
-print(f"best {y_axis}: {best_generalization_y}")
+print(f"\nbest_all_metrics_xy: {best_all_metrics_coords}")
+best_all_metrics_x = sorted(list(set(x)))[best_all_metrics_coords[1]]
+best_all_metrics_y = sorted(list(set(y)))[best_all_metrics_coords[0]]
+print(f"best {x_axis}: {best_all_metrics_x}")
+print(f"best {y_axis}: {best_all_metrics_y}")
 
-best_generalization_path = [
+best_all_metrics_path = [
     i for i in metrics_dict if 
-    metrics_dict[i][x_axis] == best_generalization_x
+    metrics_dict[i][x_axis] == best_all_metrics_x
     and
-    metrics_dict[i][y_axis] == best_generalization_y
+    metrics_dict[i][y_axis] == best_all_metrics_y
 ][0]
 
-shutil.copy(best_generalization_path, "../../results/best_params/")
+if save:
+    shutil.copy(best_all_metrics_path, save_path)
 
 def plot_ax(idx, x, y, z, scale, title):
     H = z.shape[0]
     W = z.shape[1]
-    log_z = z#np.log(z+1)
+    log_z = np.log(z+1)
     axs[idx].imshow(
         cv2.resize(log_z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
         extent=[min(x), max(x), min(y), max(y)],
