@@ -6,10 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-metrics_paths = glob(r'..\..\results\best_params\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.3-0.45)(r=0.5-0.5)(c=0.3-0.55)(s=130)(seed=1011)/*.txt')
-random.shuffle(metrics_paths)
-metrics_paths = metrics_paths[:5]
+metrics_paths = glob(r'..\..\results\best_params\all_models/*.txt')
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
+names_order+= ['rtdetr-l', 'rtdetr-x']
 x_axis = 'real' 
 y_axis = 'pred'
 
@@ -46,7 +45,7 @@ def sub_plot_axs(ax, x, y, mae, title):
     ax.set_ylabel('Predicted')
     ax.set_title(title)
     
-fig, ax = plt.subplots(1, 5)
+fig, ax = plt.subplots(1, 7)
 fig.set_size_inches(20, 4)
 for i, m in enumerate(metrics):
     sub_plot_axs(

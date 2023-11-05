@@ -5,9 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-metrics_paths = glob(r'..\..\results\best_params\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.3-0.45)(r=0.5-0.5)(c=0.3-0.55)(s=130)(seed=1011)/*.txt')
+metrics_paths = glob(r'..\..\results\best_params\all_models\*')
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
-metric = 'mape'
+names_order+= ['rtdetr-l', 'rtdetr-x']
+metric = 'mae'
  
 def get_txt_metrics(path):
     with open(path, 'r') as f:
@@ -28,6 +29,7 @@ def get_txt_metrics(path):
 metrics = list(map(get_txt_metrics, metrics_paths))
 metrics = sorted(metrics, key=lambda x: names_order.index(x[0]))
 metrics = [[m[0]+f"\n({metric.upper()}={m[1][metric]['total']:.2f})", m[1]] for m in metrics]
+[print(i) for i in metrics]
 
 def plot_ax(y, labels):
     fig, ax = plt.subplots()
