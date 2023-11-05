@@ -25,10 +25,10 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
-    'model_name': ['yolov8n'],
-    'grid_scale': [0.4],
+    'model_name': ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
+    'grid_scale': [0.30, 0.35, 0.40, 0.45],
     'resize_scale': [0.5],
-    'confiance': [0.5],
+    'confiance': [0.30, 0.35, 0.4, 0.45, 0.5, 0.55],
     'data_augmentation': [True],
     'random_seed': [1011],
     'samples': ['all'],
@@ -41,12 +41,12 @@ args = {
 max_g, min_g = args['grid_scale'][-1], args['grid_scale'][0]
 max_r, min_r = args['resize_scale'][-1], args['resize_scale'][0]
 max_c, min_c = args['confiance'][-1], args['confiance'][0]
-folder_name  = f"{'_'.join(args['model_name'])}_"
-folder_name += f"(g={min_g}-{max_g})-(r={min_r}-{max_r})-(g={min_c}-{max_c})"
-folder_name += f"(samples={args['samples'][0]})-"
+folder_name  = f"({'-'.join(args['model_name'])})"
+folder_name += f"(g={min_g}-{max_g})_(r={min_r}-{max_r})_(g={min_c}-{max_c})"
+folder_name += f"(samples={args['samples'][0]})"
 folder_name += f"(seed={args['random_seed'][0]})"
 
-args['save_path'] = [False]#[rf"../../results/metrics/images/{folder_name}"]
+args['save_path'] = [rf"../../results/metrics/images/{folder_name}"]
 
 
 @contextlib.contextmanager
@@ -101,8 +101,8 @@ class MetricsComparison:
             os.makedirs(self.save_path)
         
         with open(f"{self.save_path}/{filename}.txt", 'w') as f:
-            f.write(f"MAE: {np.mean(MAE)}\n")
-            f.write(f"MAPE: {np.mean(MAPE)}\n")
+            f.write(f"MAE: {np.mean(MAE)} {MAE}\n")
+            f.write(f"MAPE: {np.mean(MAPE)} {MAPE}\n")
             f.write(f"RMSE: {np.sqrt(np.mean(MSE))}\n")
             f.write(f"grid_scale: {self.grid_scale}\n")
             f.write(f"resize_scale: {self.resize_scale}\n")
@@ -205,18 +205,22 @@ class MetricsComparisonPool:
                 self.remaining_args -= 1
 
     def log(self):
-        while self.args_permuted:
-            try:
-                elapsed_time = datetime.timedelta(seconds=default_timer()-self.start_time)
-                average_time = np.mean(self.timers_list) / self.n_workers
-                remaing_time = datetime.timedelta(seconds=average_time*self.remaining_args)
-                print(f"Comparisons: {self.total_args - self.remaining_args}/{self.total_args}")
-                print(f"Average time: {average_time:.2f}s")
-                print(f"Elapsed time: {elapsed_time:.2f}")
-                print(f"Remaining time: {remaing_time:.2f}\n")
-            except:
-                print(f"Waiting ...")
-            time.sleep(1)
+        last_len = self.remaining_args
+        while self.remaining_args:
+            if last_len == self.remaining_args:
+                time.sleep(0.02)
+                continue
+            last_len = self.remaining_args
+
+            elapsed_time = datetime.timedelta(seconds=default_timer()-self.start_time)
+            if not self.timers_list:
+                continue
+            average_time = np.mean(self.timers_list) / self.n_workers
+            remaing_time = datetime.timedelta(seconds=average_time*self.remaining_args)
+            print(f"Comparisons: {self.total_args - self.remaining_args}/{self.total_args}")
+            print(f"Average time: {average_time}s")
+            print(f"Elapsed time: {elapsed_time}")
+            print(f"Remaining time: {remaing_time}\n")
 
     def start_no_threaded(self):
         threading.Thread(target=self.log).start()

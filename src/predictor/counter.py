@@ -159,6 +159,7 @@ class DeformableDetrModel:
 @dataclass
 class Model():
     name: str
+
     def __post_init__(self):
         if self.name in ModelsPaths.yolov8.keys():
             self.model = Yolov8Model(self.name)
@@ -187,8 +188,6 @@ class CounterModel():
     def grid_split(self, image, grid_size):
         H = int(np.ceil(image.shape[0] / grid_size))
         W = int(np.ceil(image.shape[1] / grid_size))
-        full_grid_image = np.zeros((H * grid_size, W * grid_size, 3))
-        image = full_grid_image[:image.shape[0], :image.shape[1]] = image
         grid = []
         for y in range(H):
             for x in range(W):
@@ -199,6 +198,13 @@ class CounterModel():
                     'grid_index': [x, y]
                 })
         return grid
+    
+    def expand_image_to_grid(self, image, grid_size):
+        H_grid = int(np.ceil(image.shape[0] / grid_size))
+        W_grid = int(np.ceil(image.shape[1] / grid_size))
+        full_grid_image = np.zeros((H_grid * grid_size, W_grid * grid_size, 3), dtype=np.uint8)
+        full_grid_image[:image.shape[0], :image.shape[1]] = image
+        return full_grid_image
 
     def annotate_grid(self, grid_results, image):
         for grid in grid_results:
@@ -212,24 +218,33 @@ class CounterModel():
 
     def count(self, _id, image, grid_scale, confiance, return_image):
         image = im.base64_to_numpy(image)
-        grid_results = self.grid_split(
-            image, grid_size=int(min(image.shape[:2]) * grid_scale)
-        )
+        original_shape = image.shape
+        grid_size = int(min(image.shape[:2]) * grid_scale)
+
+        image = self.expand_image_to_grid(image, grid_size)
+        grid_results = self.grid_split(image, grid_size)
+
         for grid in grid_results:
             gx1, gy1, gx2, gy2 = grid['grid_xyxy']
             results = self.model.predict(
                 image=image[gy1:gy2, gx1:gx2], 
-                confiance=confiance
+                confiance=confiance,
             )
             grid['grid_boxes_xyxy'] = self.model.get_xyxy_boxes(results)
-            
+
+        if return_image:
+            image = image[:original_shape[0], :original_shape[1]]
+            image = self.annotate_grid(grid_results, image)
+        else:
+            image = None
+        
         response = {
             '_id': _id,
             'grid_scale': grid_scale,
             'confiance': confiance,
             'total_count': sum([len(grid['grid_boxes_xyxy']) for grid in grid_results]),
             'grid_results': grid_results,
-            'annotated_image': self.annotate_grid(grid_results, image) if return_image else None 
+            'annotated_image': image
         }
         return response
 

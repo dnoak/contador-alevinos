@@ -67,7 +67,7 @@ class Image:
         return base64.b64encode(buffer).decode('utf-8')
     
     @staticmethod
-    def augment(image, angle=[0, 360], r90cw=[0, 1], flip=[0, 1]):
+    def augment(image, angle=[0, 360], r90cw=[0, 2], flip=[0, 2]):
         image = Image.rotate(
             image, 
             np.random.randint(*angle), 

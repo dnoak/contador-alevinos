@@ -28,7 +28,7 @@ class ModelTrainer():
         id2label = {k: v['name'] for k,v in categories.items()}
         self.image_processor = image_processor
         self.model = Detr(lr=1e-5, lr_backbone=1e-5, weight_decay=1e-4, id2label=id2label, train_dataloader=TRAIN_DATALOADER, val_dataloader=VAL_DATALOADER)
-        early_stop_callback = EarlyStopping(monitor="validation/loss", patience=10)
+        early_stop_callback = EarlyStopping(monitor="validation/loss", patience=50)
         
         self.trainer = Trainer(
             devices=1,
