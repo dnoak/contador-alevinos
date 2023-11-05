@@ -241,6 +241,6 @@ class MetricsComparisonPool:
 
 if __name__ == '__main__':
     pool = MetricsComparisonPool(
-        n_workers=16,
+        n_workers=8,
         args=args,
     ).start()

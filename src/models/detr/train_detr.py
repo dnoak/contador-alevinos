@@ -14,9 +14,9 @@ import torchvision
 
 MODEL_PATH = r'../../models/deformable_detr' 
 ANNOTATION_FILE_NAME = "_annotations.coco.json"
-TRAIN_DIRECTORY = r'../../../data/datasets/coco/train'
-VAL_DIRECTORY = r'../../../data/datasets/coco/valid'
-TEST_DIRECTORY = r'../../../data/datasets/coco/valid'
+TRAIN_DIRECTORY = r'../../../data/datasets/coco/teste'
+VAL_DIRECTORY = r'../../../data/datasets/coco/teste'
+TEST_DIRECTORY = r'../../../data/datasets/coco/teste'
 
 class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(
@@ -208,7 +208,7 @@ if (MODEL_NAME == 'SenseTime/deformable-detr'):
 else:
     image_processor = DetrImageProcessor.from_pretrained(MODEL_NAME)
     
-t = ModelTrainer(5, 400, image_processor, MODEL_NAME)
+t = ModelTrainer(1, 400, image_processor, MODEL_NAME)
 t.train(MODEL_PATH)
 
 #TEST_DATASET = CocoDetection(image_directory_path=TEST_DIRECTORY, image_processor=image_processor, train=False)
