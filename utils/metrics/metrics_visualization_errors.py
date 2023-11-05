@@ -5,10 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-metrics_paths = glob('../../results/best_params/alls_best_params_from_13s/*.txt')
+metrics_paths = glob(r'..\..\results\best_params\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.3-0.45)(r=0.5-0.5)(c=0.3-0.55)(s=130)(seed=1011)/*.txt')
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
-metric = 'mae'
-
+metric = 'mape'
+ 
 def get_txt_metrics(path):
     with open(path, 'r') as f:
         metrics = f.read().splitlines()

@@ -4,11 +4,9 @@ import random
 import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.ticker import FuncFormatter
 from scipy import stats
 
-metrics_paths = glob('../../results\metrics\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.4-0.4)(r=0.5-0.5)(c=0.5-0.5)(s=130)(seed=1011)/*.txt')
+metrics_paths = glob(r'..\..\results\best_params\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.3-0.45)(r=0.5-0.5)(c=0.3-0.55)(s=130)(seed=1011)/*.txt')
 random.shuffle(metrics_paths)
 metrics_paths = metrics_paths[:5]
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
@@ -39,8 +37,8 @@ def sub_plot_axs(ax, x, y, mae, title):
     slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
     y_regressed = intercept+slope*x
     ax.plot(x, y_regressed, 'r', c='red')
-    
-    ax.fill_between(x, y_regressed+mae, y_regressed-mae, alpha=0.2, color='red')
+    #std = np.std(y-y_regressed)
+    #ax.fill_between(x, y_regressed+std, y_regressed-std, alpha=0.2, color='red')
     ax.set_xticks(np.arange(0, max(x)+1, max(x)//5))
     ax.set_yticks(np.arange(0, max(y)+1, max(y)//6))
                     

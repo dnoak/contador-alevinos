@@ -22,10 +22,10 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
-    'model_name': ['rtdetr-l', 'rtdetr-x'],
-    'grid_scale': [0.3, 0.4, 0.5],
+    'model_name': ['rtdetr-x'],
+    'grid_scale': [0.2, 0.3, 0.4, 0.5],
     'resize_scale': [0.5],
-    'confiance': [0.4, 0.5, 0.6, 0.7],
+    'confiance': [0.5, 0.6, 0.7, 0.8, 0.9],
     'data_augmentation': [True],
     'random_seed': [1011],
     'samples': [26],
