@@ -17,6 +17,7 @@ MAPE_weight = 1
 RMSE_weight = 1
 
 img_show = True
+img_show = True
 img_resize_scale = 1
 
 print(f"{len(metrics_paths)} metrics loaded")
@@ -51,7 +52,7 @@ z_rmse = interp2d(x, y, get_list_from_dict(metrics_dict, 'rmse'))(x, y)
 def plot_ax(idx, x, y, z, scale, title):
     log_z = np.log(z+1)
     axs[idx].imshow(
-        cv2.resize(log_z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
+        cv2.resize(z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
         extent=[min(x), max(x), min(y), max(y)],
         origin='lower',
         aspect='auto',
