@@ -26,6 +26,7 @@ args = {
     'grid_scale': [0.2, 0.3, 0.4, 0.5],
     'resize_scale': [0.5],
     'confiance': [0.5, 0.6, 0.7, 0.8, 0.9],
+    'confiance': [0.5, 0.6, 0.7, 0.8, 0.9],
     'data_augmentation': [True],
     'random_seed': [1011],
     'samples': [26],

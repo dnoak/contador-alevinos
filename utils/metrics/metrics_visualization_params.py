@@ -9,7 +9,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(rtdetr-l-rtdetr-x)(g=0.3-0.5)(r=0.5-0.5)(c=0.4-0.7)(s=26)(seed=1011)\*')
-model_name = 'rtdetr-x'
+model_name = 'rtdetr-l'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1
@@ -50,9 +50,11 @@ z_mape = interp2d(x, y, get_list_from_dict(metrics_dict, 'mape'))(x, y)
 z_rmse = interp2d(x, y, get_list_from_dict(metrics_dict, 'rmse'))(x, y)
 
 def plot_ax(idx, x, y, z, scale, title):
+    # norm z
+    z = (z - np.min(z)) / (np.max(z) - np.min(z))
     log_z = np.log(z+1)
     axs[idx].imshow(
-        cv2.resize(z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
+        cv2.resize(log_z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
         extent=[min(x), max(x), min(y), max(y)],
         origin='lower',
         aspect='auto',
