@@ -22,17 +22,17 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
-    'model_name': ['detr-resnet-50'],
-    'grid_scale': [0.2, 0.3, 0.4, 0.5],
+    'model_name': ['yolov8x'],
+    'grid_scale': [0.3],
     'resize_scale': [0.5],
-    'confiance': [0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80],
-    'data_augmentation': [True],
+    'confiance': [0.5],
+    'data_augmentation': [False],
     'random_seed': [1011],
     'samples': ['all'],
-    'images_folder': [train_val_130_img],
-    'annotations_folder': [train_val_130_ann], 
+    'images_folder': [test_32_img],
+    'annotations_folder': [test_32_ann], 
     'show_image': [False],
-    'verbose': [False],
+    'verbose': [True],
 }
 
 max_g, min_g = args['grid_scale'][-1], args['grid_scale'][0]
