@@ -18,7 +18,7 @@ RMSE_weight = 1
 
 img_show = True
 img_resize_scale = 1
-save_path =  "../../results/best_params"
+save_path = "../../results/best_params/"
 
 metrics_paths = list(filter(lambda x: model_name in x, metrics_paths))
 print(f"{len(metrics_paths)} metrics loaded")
@@ -44,22 +44,18 @@ z_mae = get_list_from_dict(metrics_dict, 'mae')
 z_mape = get_list_from_dict(metrics_dict, 'mape')
 z_rmse = get_list_from_dict(metrics_dict, 'rmse')
 
-# sort x, y, z based on x
 x, y, z_mae, z_mape, z_rmse = zip(*sorted(zip(x, y, z_mae, z_mape, z_rmse)))
 
 x_coords = np.linspace(min(x), max(x), len(set(x)))
 y_coords = np.linspace(min(y), max(y), len(set(y)))
 
 z_mae = interp2d(x, y, get_list_from_dict(metrics_dict, 'mae'))(x_coords, y_coords)
-z_mae_norm = (z_mae - np.min(z_mae)) / (np.ptp(z_mae))
 z_mape = (interp2d(x, y,get_list_from_dict(metrics_dict, 'mape'))(x_coords, y_coords))
-z_mape_norm = (z_mape - np.min(z_mape)) / (np.ptp(z_mape))
 z_rmse = (interp2d(x, y,get_list_from_dict(metrics_dict, 'rmse'))(x_coords, y_coords))
-z_rmse_norm = (z_rmse - np.min(z_rmse)) / (np.ptp(z_rmse))
 
 best_all_metrics_coords = np.unravel_index(
-    np.argmin(z_mae_norm*MAE_weight + z_mape_norm*MAPE_weight + z_rmse_norm*RMSE_weight),
-    z_mae_norm.shape
+    np.argmin(z_mae*MAE_weight + z_mape*MAPE_weight + z_rmse*RMSE_weight),
+    z_mae.shape
 )
 print(f"\nbest_all_metrics_xy: {best_all_metrics_coords}")
 best_all_metrics_x = sorted(list(set(x)))[best_all_metrics_coords[1]]
@@ -97,9 +93,9 @@ def plot_ax(idx, x, y, z, scale, title):
         axs[idx].set_ylabel(y_axis)
 if img_show:
     fig, axs = plt.subplots(1, 3, figsize=(12, 6))
-    plot_ax(0, x, y, z_mae_norm, img_resize_scale, 'MAE')
-    plot_ax(1, x, y, z_mape_norm, img_resize_scale, 'MAPE')
-    plot_ax(2, x, y, z_rmse_norm, img_resize_scale, 'RMSE')
+    plot_ax(0, x, y, z_mae, img_resize_scale, 'MAE')
+    plot_ax(1, x, y, z_mape, img_resize_scale, 'MAPE')
+    plot_ax(2, x, y, z_rmse, img_resize_scale, 'RMSE')
     #set fig title
     fig.suptitle(f"{model_name} ({x_axis} x {y_axis})")
     plt.show()
