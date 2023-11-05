@@ -22,10 +22,10 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
-    'model_name': ['yolov8x'],
+    'model_name': ['deformable-detr'],
     'grid_scale': [0.3],
     'resize_scale': [0.5],
-    'confiance': [0.5],
+    'confiance': [0.3],
     'data_augmentation': [False],
     'random_seed': [1011],
     'samples': ['all'],

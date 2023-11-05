@@ -7,7 +7,7 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'C:\Users\Luiz\Documents\TCC\contador-alevinos\results\metrics\(deformable-detr)(g=0.2-0.5)(r=0.5-0.5)(c=0.15-0.55)(s=130)(seed=1011)\*')
+metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(deformable-detr)(g=0.2-0.5)(r=0.5-0.5)(c=0.15-0.55)(s=130)(seed=1011)\*')
 model_name = 'deformable-detr'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
@@ -49,7 +49,6 @@ z_mape = interp2d(x, y, get_list_from_dict(metrics_dict, 'mape'))(x, y)
 z_rmse = interp2d(x, y, get_list_from_dict(metrics_dict, 'rmse'))(x, y)
 
 def plot_ax(idx, x, y, z, scale, title):
-    # norm z
     z = (z - np.min(z)) / (np.max(z) - np.min(z))
     log_z = np.log(z+1)
     axs[idx].imshow(
@@ -71,7 +70,6 @@ if img_show:
     plot_ax(0, x, y, z_mae, img_resize_scale, 'MAE')
     plot_ax(1, x, y, z_mape, img_resize_scale, 'MAPE')
     plot_ax(2, x, y, z_rmse, img_resize_scale, 'RMSE')
-    #set fig title
     fig.suptitle(f"{model_name} ({x_axis} x {y_axis})")
     plt.show()
 

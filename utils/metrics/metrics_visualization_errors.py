@@ -5,10 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
-metrics_paths = glob(r'..\..\results\best_params\all_models_test\*')
+metrics_paths = glob(r'..\..\results\best_params\all_models_train\*txt')
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
-names_order+= ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50']
-metric = 'mape'
+names_order+= ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50', 'deformable-detr']
+metric = 'mae'
+
+save_path = False#Path(r'..\..\results\graphics\\') / f"{Path(metrics_paths[0]).parent.stem}_{metric}.png"
 
 def search_in_lines(lines, key, maxsplit, position):
     return {
@@ -31,23 +33,26 @@ def get_txt_metrics(path):
 metrics = list(map(get_txt_metrics, metrics_paths))
 metrics = sorted(metrics, key=lambda x: names_order.index(x['model_name']))
 
-def plot_ax(y, labels, error):
+def plot_ax(y, labels):
     fig, ax = plt.subplots()
-    fig.set_size_inches(10, 4) 
+    fig.set_size_inches(18, 5) 
     ax.boxplot([*y], widths=0.5, showfliers=False)
     normal = lambda x: np.random.normal(x, 0.04, len(y[0]))
     ax.scatter(list(map(normal, range(1, len(y)+1))), y, alpha=0.5, s=20) 
-    ax.set_xticklabels(labels)
     ylabel = 'Absolute Percentage Error' if metric == 'mape' else 'Absolute Error'
     ax.set_ylabel(ylabel)
+    ax.set_yticklabels(range(0, 100, 1))
     ax.set_xlabel(f'Model')
+    ax.set_xticklabels(labels, fontsize=9)
     ax.set_yscale('log', base=2)
     ax.grid(True, which='both', linestyle='--', linewidth=0.2)
     ax.yaxis.set_major_formatter(FuncFormatter(lambda y, _: f'{y:.16g}'))
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path)
     plt.show()
 
 plot_ax(
     y=[m[metric]['values'] for m in metrics],
     labels=[m['model_name']+f'\n({metric.upper()}={np.mean(m[metric]["total"]):.2f})' for m in metrics],
-    error=[m[metric]['total'] for m in metrics],
 )

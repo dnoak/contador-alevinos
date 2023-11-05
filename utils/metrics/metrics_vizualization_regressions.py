@@ -8,9 +8,12 @@ from scipy import stats
 
 metrics_paths = glob(r'..\..\results\best_params\all_models_train/*.txt')
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
-names_order += ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50']
+names_order += ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50', 'deformable-detr']
 x_axis = 'real' 
 y_axis = 'pred'
+xy_max = 330
+
+save_path = Path(metrics_paths[0]).parent / f"{Path(metrics_paths[0]).parent.stem}_regressions.png"
 
 def search_in_lines(lines, key, maxsplit, position):
     return {
@@ -30,7 +33,7 @@ def get_txt_metrics(path):
     return metrics
 
 metrics = list(map(get_txt_metrics, metrics_paths))
-metrics = sorted(metrics, key=lambda x: names_order.index(x['model_name']))[:5]
+metrics = sorted(metrics, key=lambda x: names_order.index(x['model_name']))
 
 def sub_plot_axs(ax, x, y, title, first):
     ax.scatter(x, y, alpha=0.5, s=20)
@@ -42,7 +45,7 @@ def sub_plot_axs(ax, x, y, title, first):
     
     ax.text(
         0.07, 0.95, 
-        f"r² = {r_value**2:.3f}\nstd={std_err:.3f}", 
+        f"r² = {r_value**2:.3f}",#\nstd={std_err:.3f}", 
         transform=ax.transAxes,
         verticalalignment='top',
         horizontalalignment='left',
@@ -56,23 +59,24 @@ def sub_plot_axs(ax, x, y, title, first):
     ax.set_xlabel('Real')
 
     ax.yaxis.set_tick_params(labelleft=False)
-    ax.set_xticks(np.arange(0, max(x)+1, 60))
-    ax.set_xticklabels(np.arange(0, max(x)+1, 60), fontsize=8)
-    ax.set_yticks(np.arange(0, max(x)+1, 30))
-    ax.set_yticklabels(np.arange(0, max(x)+1, 30), fontsize=8)
-    ax.set_xlim(0, max(x))
-    ax.set_ylim(0, max(x))
+    ax.set_xticks(np.arange(0, xy_max, 90))
+    ax.set_xticklabels(np.arange(0, xy_max, 90), fontsize=8)
+
+    ax.set_yticks(np.arange(0, xy_max, 30))
+    ax.set_yticklabels(np.arange(0, xy_max, 30), fontsize=8)
+    ax.set_xlim(0, xy_max)#max(x))
+    ax.set_ylim(-5, xy_max)#max(x))
 
     if first:
         ax.yaxis.set_tick_params(labelleft=True)
         ax.set_ylabel('Predicted')
 
     ax.grid(True, which='both', linestyle='--', linewidth=0.4)
-    ax.set_title(title)
+    ax.set_title(title, fontsize=9)
 
 
 fig, ax = plt.subplots(1, len(metrics))
-fig.set_size_inches(20, 4)
+fig.set_size_inches(15, 5)
 for i, m in enumerate(metrics):
     sub_plot_axs(
         ax[i], 
@@ -82,6 +86,9 @@ for i, m in enumerate(metrics):
         first=i==0,
     )
 #plt.autoscale(False)
+plt.subplots_adjust(wspace=0.07)
 plt.tight_layout()
+if save_path:
+    plt.savefig(save_path)
 plt.show()
 
