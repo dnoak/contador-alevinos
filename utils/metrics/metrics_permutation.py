@@ -25,13 +25,13 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
-    'model_name': ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
-    'grid_scale': [0.30, 0.35, 0.40, 0.45],
+    'model_name': ['rtdetr-l', 'rtdetr-x'],
+    'grid_scale': [0.3, 0.4, 0.5],
     'resize_scale': [0.5],
-    'confiance': [0.30, 0.35, 0.4, 0.45, 0.5, 0.55],
+    'confiance': [0.4, 0.5, 0.6, 0.7],
     'data_augmentation': [True],
     'random_seed': [1011],
-    'samples': ['all'],
+    'samples': [26],
     'images_folder': [train_val_130_img],
     'annotations_folder': [train_val_130_ann], 
     'show_image': [False],
@@ -244,6 +244,6 @@ class MetricsComparisonPool:
 
 if __name__ == '__main__':
     pool = MetricsComparisonPool(
-        n_workers=28,
+        n_workers=16,
         args=args,
     ).start()

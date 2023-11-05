@@ -8,17 +8,17 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'..\..\results\metrics\images\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)_(g=0.25-0.5)_(r=0.5-0.5)_(g=0.3-0.6)_(samples=13)_(seed=1011)\*')
-model_name = 'yolov8x_'
+metrics_paths = glob(r'C:\Users\Luiz\Documents\TCC\contador-alevinos\results\metrics\(rtdetr-l-rtdetr-x)(g=0.3-0.5)(r=0.5-0.5)(c=0.4-0.7)(s=26)(seed=1011)\*')
+model_name = 'rtdetr-x'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1
 MAPE_weight = 1
 RMSE_weight = 1
 
-img_show = False
+img_show = True
 img_resize_scale = 1
-save_path = "../../results/best_params/"
+save_path =  "../../results/best_params"
 
 metrics_paths = list(filter(lambda x: model_name in x, metrics_paths))
 print(f"{len(metrics_paths)} metrics loaded")
