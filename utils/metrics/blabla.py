@@ -41,11 +41,8 @@ def sub_plot_axs(ax, x, y, mae, title):
     ax.plot(x, y_regressed, 'r', c='red')
     
     ax.fill_between(x, y_regressed+mae, y_regressed-mae, alpha=0.2, color='red')
-    # increase xticks
     ax.set_xticks(np.arange(0, max(x)+1, max(x)//5))
     ax.set_yticks(np.arange(0, max(y)+1, max(y)//6))
-    # increase yticks
-    
                     
     ax.set_xlabel('Real')
     ax.set_ylabel('Predicted')

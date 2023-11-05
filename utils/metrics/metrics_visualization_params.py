@@ -44,7 +44,7 @@ z_mae = get_list_from_dict(metrics_dict, 'mae')
 z_mape = get_list_from_dict(metrics_dict, 'mape')
 z_rmse = get_list_from_dict(metrics_dict, 'rmse')
 
-x, y, z_mae, z_mape, z_rmse = zip(*sorted(zip(x, y, z_mae, z_mape, z_rmse)))
+#x, y, z_mae, z_mape, z_rmse = zip(*sorted(zip(x, y, z_mae, z_mape, z_rmse)))
 
 x_coords = np.linspace(min(x), max(x), len(set(x)))
 y_coords = np.linspace(min(y), max(y), len(set(y)))
@@ -53,33 +53,12 @@ z_mae = interp2d(x, y, get_list_from_dict(metrics_dict, 'mae'))(x_coords, y_coor
 z_mape = (interp2d(x, y,get_list_from_dict(metrics_dict, 'mape'))(x_coords, y_coords))
 z_rmse = (interp2d(x, y,get_list_from_dict(metrics_dict, 'rmse'))(x_coords, y_coords))
 
-best_all_metrics_coords = np.unravel_index(
-    np.argmin(z_mae*MAE_weight + z_mape*MAPE_weight + z_rmse*RMSE_weight),
-    z_mae.shape
-)
-print(f"\nbest_all_metrics_xy: {best_all_metrics_coords}")
-best_all_metrics_x = sorted(list(set(x)))[best_all_metrics_coords[1]]
-best_all_metrics_y = sorted(list(set(y)))[best_all_metrics_coords[0]]
-print(f"best {x_axis}: {best_all_metrics_x}")
-print(f"best {y_axis}: {best_all_metrics_y}")
-
-best_all_metrics_path = [
-    i for i in metrics_dict if 
-    metrics_dict[i][x_axis] == best_all_metrics_x
-    and
-    metrics_dict[i][y_axis] == best_all_metrics_y
-][0]
-
-if save_path:
-    shutil.copy(best_all_metrics_path, save_path)
-    print(f"Saved at: {best_all_metrics_path}")
-
 def plot_ax(idx, x, y, z, scale, title):
     H = z.shape[0]
     W = z.shape[1]
     log_z = np.log(z+1)
     axs[idx].imshow(
-        cv2.resize(log_z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
+        cv2.resize(z, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4),
         extent=[min(x), max(x), min(y), max(y)],
         origin='lower',
         aspect='auto',
