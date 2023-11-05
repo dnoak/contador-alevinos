@@ -1,5 +1,4 @@
 from pathlib import Path
-import shutil
 import cv2
 from glob import glob
 import matplotlib.pyplot as plt
