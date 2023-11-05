@@ -1,7 +1,4 @@
 import sys
-
-from matplotlib import pyplot as plt
-from scipy import stats
 sys.path.append('../..')
 from utils.common.image_utils import Image as im
 from utils.common.yolo_utils import YoloAnnotation

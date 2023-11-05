@@ -8,17 +8,17 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'..\..\results\metrics\images\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)_(g=0.25-0.5)_(r=0.5-0.5)_(g=0.3-0.6)_(samples=13)_(seed=1011)\*')
-model_name = 'yolov8x_'
+metrics_paths = glob(r'..\..\results\metrics\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.3-0.45)(r=0.5-0.5)(c=0.3-0.55)(s=130)(seed=1011)\*')
+model_name = 'yolov8n_'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1
 MAPE_weight = 1
 RMSE_weight = 1
 
-img_show = False
+img_show = True
 img_resize_scale = 1
-save_path = "../../results/best_params/"
+save_path = False#"../../results/best_params/"
 
 metrics_paths = list(filter(lambda x: model_name in x, metrics_paths))
 print(f"{len(metrics_paths)} metrics loaded")
@@ -44,7 +44,6 @@ z_mae = get_list_from_dict(metrics_dict, 'mae')
 z_mape = get_list_from_dict(metrics_dict, 'mape')
 z_rmse = get_list_from_dict(metrics_dict, 'rmse')
 
-# sort x, y, z based on x
 x, y, z_mae, z_mape, z_rmse = zip(*sorted(zip(x, y, z_mae, z_mape, z_rmse)))
 
 x_coords = np.linspace(min(x), max(x), len(set(x)))
