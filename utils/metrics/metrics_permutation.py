@@ -41,13 +41,15 @@ args = {
 max_g, min_g = args['grid_scale'][-1], args['grid_scale'][0]
 max_r, min_r = args['resize_scale'][-1], args['resize_scale'][0]
 max_c, min_c = args['confiance'][-1], args['confiance'][0]
+samples = args['samples'][0] if args['samples'][0] != 'all' else \
+    len(glob(f"{args['images_folder'][0]}/*"))
 folder_name  = f"({'-'.join(args['model_name'])})"
-folder_name += f"(g={min_g}-{max_g})_(r={min_r}-{max_r})_(g={min_c}-{max_c})"
-folder_name += f"(samples={args['samples'][0]})"
+folder_name += f"(g={min_g}-{max_g})(r={min_r}-{max_r})(c={min_c}-{max_c})"
+folder_name += f"(s={samples})"
 folder_name += f"(seed={args['random_seed'][0]})"
 
-args['save_path'] = [rf"../../results/metrics/images/{folder_name}"]
-
+args['save_path'] = [rf"../../results/metrics/{folder_name}"]
+args['samples'] = [samples]
 
 @contextlib.contextmanager
 def timer(message="Time"):
@@ -85,7 +87,7 @@ class MetricsComparison:
                 continue
             setattr(self, key, value)
     
-    def save_metrics(self, MAE, MAPE, MSE, total_pred, total_real):
+    def save_metrics(self, MAE, MAPE, MSE, pred, real):
         filename_parameters = [
             self.model_name, 
             self.grid_scale, 
@@ -103,15 +105,16 @@ class MetricsComparison:
         with open(f"{self.save_path}/{filename}.txt", 'w') as f:
             f.write(f"MAE: {np.mean(MAE)} {MAE}\n")
             f.write(f"MAPE: {np.mean(MAPE)} {MAPE}\n")
-            f.write(f"RMSE: {np.sqrt(np.mean(MSE))}\n")
+            f.write(f"RMSE: {np.sqrt(np.mean(MSE))} {MSE}\n\n")
+            f.write(f"pred: {sum(pred)} {pred}\n")
+            f.write(f"real: {sum(real)} {real}\n\n")
+
             f.write(f"grid_scale: {self.grid_scale}\n")
             f.write(f"resize_scale: {self.resize_scale}\n")
             f.write(f"confiance: {self.confiance}\n\n")
             f.write(f"random_seed: {self.random_seed}\n")
             f.write(f"data_augmentation: {self.data_augmentation}\n")
             f.write(f"samples: {self.samples}\n")
-            f.write(f"total_pred: {total_pred}\n")
-            f.write(f"total_real: {total_real}\n")
     
     def generate_metrics(self):
         random.seed(self.random_seed)
@@ -163,7 +166,7 @@ class MetricsComparison:
         x, y = zip(*sorted(zip(real, MAPE), key=lambda x: x[0]))
 
         if self.save_path:
-            self.save_metrics(MAE, MAPE, MSE, sum(pred), sum(real))
+            self.save_metrics(MAE, MAPE, MSE, pred, real)
 
 @dataclass
 class MetricsComparisonPool:
@@ -239,9 +242,8 @@ class MetricsComparisonPool:
         end_time = default_timer()
         print(f"Total time: {end_time - self.start_time:.2f}s")
 
-
 if __name__ == '__main__':
     pool = MetricsComparisonPool(
-        n_workers=16,
+        n_workers=28,
         args=args,
     ).start()
