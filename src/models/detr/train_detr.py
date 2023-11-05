@@ -1,33 +1,132 @@
 from torch.utils.data import DataLoader
-from Classes.coco_detection import CocoDetection
-from Classes.models import Detr
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from transformers import DetrImageProcessor, DetrForObjectDetection
+from transformers import DetrImageProcessor, DetrForObjectDetection, DeformableDetrForObjectDetection, AutoImageProcessor
 import torch
 import supervision as sv
 import random
 import cv2
 import matplotlib.pyplot as plt
 import os
+import pytorch_lightning as pl
+import torchvision
 
-MODEL_PATH = r'../../models/detr_2' 
+
+MODEL_PATH = r'../../models/deformable_detr' 
 ANNOTATION_FILE_NAME = "_annotations.coco.json"
-TRAIN_DIRECTORY = os.path.join('Dataset', "train")
-VAL_DIRECTORY = os.path.join('Dataset', "valid")
-TEST_DIRECTORY = os.path.join('Dataset', "test")
+TRAIN_DIRECTORY = r'../../../data/datasets/coco/train'
+VAL_DIRECTORY = r'../../../data/datasets/coco/valid'
+TEST_DIRECTORY = r'../../../data/datasets/coco/valid'
+
+class CocoDetection(torchvision.datasets.CocoDetection):
+    def __init__(
+        self, 
+        image_directory_path: str, 
+        image_processor, 
+        train: bool = True
+    ):
+        annotation_file_path = os.path.join(image_directory_path, ANNOTATION_FILE_NAME)
+        super(CocoDetection, self).__init__(image_directory_path, annotation_file_path)
+        self.image_processor = image_processor
+
+    def __getitem__(self, idx):
+        images, annotations = super(CocoDetection, self).__getitem__(idx)        
+        image_id = self.ids[idx]
+        annotations = {'image_id': image_id, 'annotations': annotations}
+        encoding = self.image_processor(images=images, annotations=annotations, return_tensors="pt")
+        pixel_values = encoding["pixel_values"].squeeze()
+        target = encoding["labels"][0]
+        return pixel_values, target
+
+
+class Model(pl.LightningModule):
+    def __init__(self, lr, lr_backbone, weight_decay, id2label, train_dataloader, val_dataloader, CHECKPOINT = "facebook/detr-resnet-50"):
+        super().__init__()
+        if (CHECKPOINT == 'SenseTime/deformable-detr'):
+            self.model = DeformableDetrForObjectDetection.from_pretrained(
+                pretrained_model_name_or_path=CHECKPOINT, 
+                num_labels=len(id2label),
+                ignore_mismatched_sizes=True
+            )
+        else:
+            self.model = DetrForObjectDetection.from_pretrained(
+            pretrained_model_name_or_path=CHECKPOINT, 
+            num_labels=len(id2label),
+            ignore_mismatched_sizes=True
+        )
+            
+        self.TRAIN_DATALOADER = train_dataloader
+        self.VAL_DATALOADER = val_dataloader
+        self.lr = lr
+        self.lr_backbone = lr_backbone
+        self.weight_decay = weight_decay
+
+    def forward(self, pixel_values, pixel_mask):
+        return self.model(pixel_values=pixel_values, pixel_mask=pixel_mask)
+
+    def common_step(self, batch, batch_idx):
+        pixel_values = batch["pixel_values"]
+        pixel_mask = batch["pixel_mask"]
+        labels = [{k: v.to(self.device) for k, v in t.items()} for t in batch["labels"]]
+
+        outputs = self.model(pixel_values=pixel_values, pixel_mask=pixel_mask, labels=labels)
+
+        loss = outputs.loss
+        loss_dict = outputs.loss_dict
+
+        return loss, loss_dict
+
+    def training_step(self, batch, batch_idx):
+        loss, loss_dict = self.common_step(batch, batch_idx)     
+        # logs metrics for each training_step, and the average across the epoch
+        self.log("training_loss", loss)
+        for k,v in loss_dict.items():
+            self.log("train_" + k, v.item())
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        loss, loss_dict = self.common_step(batch, batch_idx)     
+        self.log("validation/loss", loss)
+        for k, v in loss_dict.items():
+            self.log("validation_" + k, v.item())
+            
+        return loss
+
+    def configure_optimizers(self):
+        # DETR authors decided to use different learning rate for backbone
+        # you can learn more about it here: 
+        # - https://github.com/facebookresearch/detr/blob/3af9fa878e73b6894ce3596450a8d9b89d918ca9/main.py#L22-L23
+        # - https://github.com/facebookresearch/detr/blob/3af9fa878e73b6894ce3596450a8d9b89d918ca9/main.py#L131-L139
+        param_dicts = [
+            {
+                "params": [p for n, p in self.named_parameters() if "backbone" not in n and p.requires_grad]},
+            {
+                "params": [p for n, p in self.named_parameters() if "backbone" in n and p.requires_grad],
+                "lr": self.lr_backbone,
+            },
+        ]
+        return torch.optim.AdamW(param_dicts, lr=self.lr, weight_decay=self.weight_decay)
+
+    def train_dataloader(self):
+        return self.TRAIN_DATALOADER
+
+    def val_dataloader(self):
+        return self.VAL_DATALOADER
+
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class ModelTrainer():
     def __init__(self, log_every_n_steps, max_epochs, image_processor, model):
         TRAIN_DATASET = CocoDetection(image_directory_path=TRAIN_DIRECTORY, image_processor=image_processor, train=True)
         VAL_DATASET = CocoDetection(image_directory_path=VAL_DIRECTORY, image_processor=image_processor, train=False)
-        TRAIN_DATALOADER = DataLoader(dataset=TRAIN_DATASET, collate_fn=self.collate_fn, batch_size=12, shuffle=True)
-        VAL_DATALOADER = DataLoader(dataset=VAL_DATASET, collate_fn=self.collate_fn, batch_size=12)
+        TRAIN_DATALOADER = DataLoader(dataset=TRAIN_DATASET, collate_fn=self.collate_fn, batch_size=2, shuffle=True)
+        VAL_DATALOADER = DataLoader(dataset=VAL_DATASET, collate_fn=self.collate_fn, batch_size=2)
         categories = TRAIN_DATASET.coco.cats
         id2label = {k: v['name'] for k,v in categories.items()}
         self.image_processor = image_processor
-        self.model = Detr(lr=1e-5, lr_backbone=1e-5, weight_decay=1e-4, id2label=id2label, train_dataloader=TRAIN_DATALOADER, val_dataloader=VAL_DATALOADER)
+        self.model = Model(lr=1e-5, lr_backbone=1e-5, weight_decay=1e-4, id2label=id2label, train_dataloader=TRAIN_DATALOADER, val_dataloader=VAL_DATALOADER, CHECKPOINT=model)
         early_stop_callback = EarlyStopping(monitor="validation/loss", patience=50)
         
         self.trainer = Trainer(
@@ -35,12 +134,11 @@ class ModelTrainer():
             accelerator="gpu", 
             max_epochs=max_epochs, 
             gradient_clip_val=0.1, 
-            accumulate_grad_batches=8, 
             log_every_n_steps=log_every_n_steps,
             callbacks=[early_stop_callback])
     
     def train(self, model_path):
-        self.trainer.fit(self.model)# , ckpt_path=r'D:\Documentos\Projetos\tcc\contagem-ovos-larvas-peixe\lightning_logs\version_15\checkpoints\epoch=41-step=804.ckpt')
+        self.trainer.fit(self.model)
         self.model.model.save_pretrained(model_path)
     
     def collate_fn(self, batch):
@@ -102,8 +200,14 @@ class ModelTester():
             plt.show()
             
             
-MODEL_NAME = 'facebook/detr-resnet-50'
-image_processor = DetrImageProcessor.from_pretrained(MODEL_NAME)
+#MODEL_NAME = 'facebook/detr-resnet-50'
+MODEL_NAME = 'SenseTime/deformable-detr'
+
+if (MODEL_NAME == 'SenseTime/deformable-detr'):
+    image_processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
+else:
+    image_processor = DetrImageProcessor.from_pretrained(MODEL_NAME)
+    
 t = ModelTrainer(5, 400, image_processor, MODEL_NAME)
 t.train(MODEL_PATH)
 
