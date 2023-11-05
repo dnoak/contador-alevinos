@@ -8,8 +8,8 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(rtdetr-x)(g=0.2-0.5)(r=0.5-0.5)(c=0.5-0.9)(s=26)(seed=1011)\*')
-model_name = 'rtdetr-x'
+metrics_paths = glob(r'C:\Users\Luiz\Documents\TCC\contador-alevinos\results\metrics\(deformable-detr)(g=0.2-0.5)(r=0.5-0.5)(c=0.15-0.55)(s=130)(seed=1011)\*')
+model_name = 'deformable-detr'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1
