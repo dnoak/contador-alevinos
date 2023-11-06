@@ -24,7 +24,7 @@ class ModelsPaths():
         'yolov8x': r'../../data/models/yolov8/yolov8s.pt',    
     }
     detr = {
-        'detr-resnet-50': r'../../data/models/detr/detr-resnet-50',
+        'detr-resnet-50': r'../../data/models/detr-resnet-50',
     }
     deformable_detr = {
         'deformable-detr': r'../../data/models/deformable-detr/deformable-detr',
