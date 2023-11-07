@@ -1,7 +1,5 @@
 from glob import glob
 from pathlib import Path
-import random
-import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
@@ -13,7 +11,7 @@ x_axis = 'real'
 y_axis = 'pred'
 xy_max = 330
 
-save_path = Path(metrics_paths[0]).parent / f"{Path(metrics_paths[0]).parent.stem}_regressions.png"
+save_path = Path(r'..\..\results\graphics\\') / f"{Path(metrics_paths[0]).parent.stem}_regressions.png"
 
 def search_in_lines(lines, key, maxsplit, position):
     return {
@@ -35,7 +33,7 @@ def get_txt_metrics(path):
 metrics = list(map(get_txt_metrics, metrics_paths))
 metrics = sorted(metrics, key=lambda x: names_order.index(x['model_name']))
 
-def sub_plot_axs(ax, x, y, title, first):
+def sub_plot_axs(ax, x, y, title, fontsize, first):
     ax.scatter(x, y, alpha=0.5, s=20)
     slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
     y_regressed = intercept+slope*x
@@ -56,23 +54,23 @@ def sub_plot_axs(ax, x, y, title, first):
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_xlabel('Real')
+    ax.set_xlabel('Real', fontsize=fontsize)
 
     ax.yaxis.set_tick_params(labelleft=False)
     ax.set_xticks(np.arange(0, xy_max, 90))
-    ax.set_xticklabels(np.arange(0, xy_max, 90), fontsize=8)
+    ax.set_xticklabels(np.arange(0, xy_max, 90), fontsize=10)
 
     ax.set_yticks(np.arange(0, xy_max, 30))
-    ax.set_yticklabels(np.arange(0, xy_max, 30), fontsize=8)
-    ax.set_xlim(0, xy_max)#max(x))
-    ax.set_ylim(-5, xy_max)#max(x))
+    ax.set_yticklabels(np.arange(0, xy_max, 30), fontsize=10)
+    ax.set_xlim(0, xy_max)
+    ax.set_ylim(-5, xy_max)
 
     if first:
         ax.yaxis.set_tick_params(labelleft=True)
-        ax.set_ylabel('Predicted')
+        ax.set_ylabel('Predicted', fontsize=fontsize)
 
     ax.grid(True, which='both', linestyle='--', linewidth=0.4)
-    ax.set_title(title, fontsize=9)
+    ax.set_title(title, fontsize=fontsize)
 
 
 fig, ax = plt.subplots(1, len(metrics))
@@ -83,6 +81,7 @@ for i, m in enumerate(metrics):
         np.array(m[x_axis]['values']), 
         np.array(m[y_axis]['values']),
         m['model_name'],
+        12,
         first=i==0,
     )
 #plt.autoscale(False)

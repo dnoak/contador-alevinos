@@ -119,7 +119,8 @@ class MetricsComparison:
 
         MAE, MAPE, MSE = [], [], []
         real, pred = [], []
-        for image_path, annotation_path in self.images_and_annotations:
+        for count, (image_path, annotation_path) in enumerate(
+            self.images_and_annotations):
             image = cv2.imread(image_path)
             image = im.augment(image) if self.data_augmentation else image
             image = im.resize(image, self.resize_scale)
@@ -146,6 +147,7 @@ class MetricsComparison:
 
             if self.verbose:
                 print(f"{'-'*20}")
+                print(f"< {count+1}/{len(self.images_and_annotations)} >")
                 print(f"Model: {self.model_name}")
                 print(f"MAE:  {result_MAE:.2f}  | acc: {np.mean(MAE):.2f}")
                 print(f"MAPE: {result_MAPE:.2f}% | acc: {np.mean(MAPE):.2f}%")
@@ -158,7 +160,8 @@ class MetricsComparison:
             
             if self.show_image:
                 image_annotated = im.base64_to_numpy(result['annotated_image'])
-                im.show(image_annotated)
+                im.show_pillow(image_annotated)
+                input()
 
         x, y = zip(*sorted(zip(real, MAPE), key=lambda x: x[0]))
 
@@ -241,6 +244,6 @@ class MetricsComparisonPool:
 
 if __name__ == '__main__':
     pool = MetricsComparisonPool(
-        n_workers=8,
+        n_workers=16,
         args=args,
     ).start()
