@@ -7,8 +7,8 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'C:\Users\Luiz\Documents\TCC\contador-alevinos\results\metrics\(detr-resnet-50)(g=0.2-0.5)(r=0.5-0.5)(c=0.3-0.9)(s=32)(seed=1011)\*')
-model_name = 'detr-resnet-50'
+metrics_paths = glob(r'C:\Users\Luiz\Documents\TCC\contador-alevinos\results\metrics\(deformable-detr)(g=0.2-0.5)(r=0.5-0.5)(c=0.1-0.6)(s=130)(seed=1011)\*')
+model_name = 'deformable-detr'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1

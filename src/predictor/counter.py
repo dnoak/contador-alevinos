@@ -27,7 +27,7 @@ class ModelsPaths():
         'detr-resnet-50': r'../../data/models/detr-resnet-50',
     }
     deformable_detr = {
-        'deformable-detr': r'../../data/models/deformable-detr/deformable-detr',
+        'deformable-detr': r'../../data/models/deformable-detr',
     }
     rtdetr = {
         'rtdetr-l': r'../../data/models/rtdetr/rtdetr-l.pt',

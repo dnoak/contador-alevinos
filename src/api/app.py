@@ -16,7 +16,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 application = Flask(__name__)
 
 backend = CounterModel(
-    model_name='yolov8n',
+    model_name='detr-resnet-50',
 )
 
 @application.route('/')

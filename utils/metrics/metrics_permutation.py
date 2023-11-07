@@ -22,17 +22,17 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
-    'model_name': ['detr-resnet-50'],
-    'grid_scale': [0.3],
+    'model_name': ['deformable-detr'],
+    'grid_scale': [0.2, 0.3, 0.4, 0.5],
     'resize_scale': [0.5],
-    'confiance': [0.9],
-    'data_augmentation': [False],
+    'confiance': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+    'data_augmentation': [True],
     'random_seed': [1011],
     'samples': ['all'],
-    'images_folder': [test_32_img],
-    'annotations_folder': [test_32_ann], 
-    'show_image': [True],
-    'verbose': [True],
+    'images_folder': [train_val_130_img],
+    'annotations_folder': [train_val_130_ann], 
+    'show_image': [False],
+    'verbose': [False],
 }
 
 max_g, min_g = args['grid_scale'][-1], args['grid_scale'][0]
@@ -45,7 +45,7 @@ folder_name += f"(g={min_g}-{max_g})(r={min_r}-{max_r})(c={min_c}-{max_c})"
 folder_name += f"(s={samples})"
 folder_name += f"(seed={args['random_seed'][0]})"
 
-args['save_path'] = [False] # [rf"../../results/metrics/{folder_name}"]
+args['save_path'] = [rf"../../results/metrics/{folder_name}"]
 args['samples'] = [samples]
 
 @contextlib.contextmanager
