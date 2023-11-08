@@ -4,14 +4,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-metrics_paths = glob(r'..\..\results\best_params\all_models_train/*.txt')
+metrics_paths_train = glob(r'..\..\results\best_params\all_models_train/*.txt')
+metrics_paths_test  = glob(r'..\..\results\best_params\all_models_test/*.txt')
+
+
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
 names_order += ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50', 'deformable-detr']
 x_axis = 'real' 
 y_axis = 'pred'
 xy_max = 330
+fontsize = 13.5
 
-save_path = Path(r'..\..\results\graphics\\') / f"{Path(metrics_paths[0]).parent.stem}_regressions.png"
+save_path = Path(r'..\..\results\graphics\\') / "train_and_test_regressions.png"
 
 def search_in_lines(lines, key, maxsplit, position):
     return {
@@ -30,20 +34,16 @@ def get_txt_metrics(path):
     }
     return metrics
 
-metrics = list(map(get_txt_metrics, metrics_paths))
-metrics = sorted(metrics, key=lambda x: names_order.index(x['model_name']))
 
-def sub_plot_axs(ax, x, y, title, fontsize, first):
+def sub_plot_axs(ax, x, y, title, fontsize, last_x_label, first_y_label):
     ax.scatter(x, y, alpha=0.5, s=20)
     slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
     y_regressed = intercept+slope*x
     ax.plot(x, y_regressed, 'r', c='red')
-    #std = np.std(y-y_regressed)
     #ax.fill_between(x, y_regressed+std, y_regressed-std, alpha=0.2, color='red')
-    
     ax.text(
         0.07, 0.95, 
-        f"r² = {r_value**2:.3f}",#\nstd={std_err:.3f}", 
+        f"r² = {r_value**2:.3f}",
         transform=ax.transAxes,
         verticalalignment='top',
         horizontalalignment='left',
@@ -54,35 +54,50 @@ def sub_plot_axs(ax, x, y, title, fontsize, first):
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_xlabel('Real', fontsize=fontsize)
-
     ax.yaxis.set_tick_params(labelleft=False)
     ax.set_xticks(np.arange(0, xy_max, 90))
     ax.set_xticklabels(np.arange(0, xy_max, 90), fontsize=10)
-
     ax.set_yticks(np.arange(0, xy_max, 30))
     ax.set_yticklabels(np.arange(0, xy_max, 30), fontsize=10)
     ax.set_xlim(0, xy_max)
     ax.set_ylim(-5, xy_max)
-
-    if first:
+    if last_x_label:
+        ax.set_xlabel(last_x_label, fontsize=fontsize) 
+    if first_y_label:
         ax.yaxis.set_tick_params(labelleft=True)
-        ax.set_ylabel('Predicted', fontsize=fontsize)
-
+        ax.set_ylabel(first_y_label, fontsize=fontsize)
+    if title:
+        ax.set_title(title, fontsize=fontsize)
     ax.grid(True, which='both', linestyle='--', linewidth=0.4)
-    ax.set_title(title, fontsize=fontsize)
+
+metrics_train = list(map(get_txt_metrics, metrics_paths_train))
+metrics_train = sorted(metrics_train, key=lambda x: names_order.index(x['model_name']))
+metrics_test = list(map(get_txt_metrics, metrics_paths_test))
+metrics_test = sorted(metrics_test, key=lambda x: names_order.index(x['model_name']))
 
 
-fig, ax = plt.subplots(1, len(metrics))
+fig, ax = plt.subplots(2, len(metrics_train))
 fig.set_size_inches(15, 5)
-for i, m in enumerate(metrics):
+
+for i, m in enumerate(metrics_train):
     sub_plot_axs(
-        ax[i], 
+        ax[0, i], 
         np.array(m[x_axis]['values']), 
         np.array(m[y_axis]['values']),
         m['model_name'],
-        12,
-        first=i==0,
+        fontsize=fontsize,
+        last_x_label=False,
+        first_y_label='Real (Treino)' if i==0 else False,
+    )
+for i, m in enumerate(metrics_test):
+    sub_plot_axs(
+        ax[1, i], 
+        np.array(m[x_axis]['values']), 
+        np.array(m[y_axis]['values']),
+        False,
+        fontsize=fontsize,
+        last_x_label='Real',
+        first_y_label='Real (Teste)' if i==0 else False,
     )
 #plt.autoscale(False)
 plt.subplots_adjust(wspace=0.07)

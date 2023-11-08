@@ -7,7 +7,7 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(detr-resnet-50)(g=0.2-0.5)(r=0.5-0.5)(c=0.5-0.8)(s=130)(seed=1011)\*')
+metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(detr-resnet-50)(g=0.2-0.5)(r=0.5-0.5)(c=0.5-0.85)(s=130)(seed=1011)\*')
 model_name = 'detr-resnet-50'
 x_axis = 'grid_scale'
 y_axis = 'confiance'

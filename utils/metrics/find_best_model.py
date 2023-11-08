@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 
-metrics_paths = glob(r'..\..\results\best_params\all_models_train/*.txt')
+metrics_paths = glob(r'..\..\results\best_params\all_models_test/*.txt')
 names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
 names_order += ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50', 'deformable-detr']
 x_axis = 'real' 

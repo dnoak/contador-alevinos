@@ -23,15 +23,15 @@ test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
     'model_name': ['detr-resnet-50'],
-    'grid_scale': [0.4],
+    'grid_scale': [0.3],
     'resize_scale': [0.5],
-    'confiance': [0.9],
+    'confiance': [0.85],
     'data_augmentation': [False],
     'random_seed': [1011],
     'samples': ['all'],
-    'images_folder': [train_val_130_img],
-    'annotations_folder': [train_val_130_ann], 
-    'show_image': [True],
+    'images_folder': [test_32_img],
+    'annotations_folder': [test_32_ann], 
+    'show_image': [False],
     'verbose': [True],
 }
 
