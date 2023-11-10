@@ -7,9 +7,6 @@ from scipy import stats
 metrics_paths_train = glob(r'..\..\results\best_params\all_models_train/*.txt')
 metrics_paths_test  = glob(r'..\..\results\best_params\all_models_test/*.txt')
 
-
-names_order = ['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x']
-names_order += ['rtdetr-l', 'rtdetr-x', 'detr-resnet-50', 'deformable-detr']
 x_axis = 'real' 
 y_axis = 'pred'
 xy_max = 330
@@ -70,39 +67,53 @@ def sub_plot_axs(ax, x, y, title, fontsize, last_x_label, first_y_label):
         ax.set_title(title, fontsize=fontsize)
     ax.grid(True, which='both', linestyle='--', linewidth=0.4)
 
-metrics_train = list(map(get_txt_metrics, metrics_paths_train))
-metrics_train = sorted(metrics_train, key=lambda x: names_order.index(x['model_name']))
+
 metrics_test = list(map(get_txt_metrics, metrics_paths_test))
-metrics_test = sorted(metrics_test, key=lambda x: names_order.index(x['model_name']))
+metrics_train = list(map(get_txt_metrics, metrics_paths_train))
+# order by r² from metrics_test
+r2 = lambda x: stats.linregress(x['real']['values'], x['pred']['values'])[2]**2
+
+metrics_test = sorted(metrics_test, key=r2, reverse=True)
+sorted_metrics_train = []
+for m in metrics_test:
+    for i in metrics_train:
+        if i['model_name'] == m['model_name']:
+            sorted_metrics_train.append(i)
+            break
+metrics_train = sorted_metrics_train
+
+#metrics_train = sorted(metrics_train, key=lambda x: names_order.index(x['model_name']))
+#metrics_test = sorted(metrics_test, key=lambda x: names_order.index(x['model_name']))
 
 
-fig, ax = plt.subplots(2, len(metrics_train))
+fig, ax = plt.subplots(len(metrics_train), 2)
+#fig.set_size_inches(14.85, 10.5)
 fig.set_size_inches(15, 5)
 
 for i, m in enumerate(metrics_train):
     sub_plot_axs(
-        ax[0, i], 
+        ax[i, 0], 
         np.array(m[x_axis]['values']), 
         np.array(m[y_axis]['values']),
         m['model_name'],
         fontsize=fontsize,
         last_x_label=False,
-        first_y_label='Real (Treino)' if i==0 else False,
+        first_y_label='Predito (Treino)' if i==0 else False,
     )
 for i, m in enumerate(metrics_test):
     sub_plot_axs(
-        ax[1, i], 
+        ax[i, 1], 
         np.array(m[x_axis]['values']), 
         np.array(m[y_axis]['values']),
         False,
         fontsize=fontsize,
         last_x_label='Real',
-        first_y_label='Real (Teste)' if i==0 else False,
+        first_y_label='Predito (Teste)' if i==0 else False,
     )
 #plt.autoscale(False)
-plt.subplots_adjust(wspace=0.07)
+#plt.subplots_adjust(wspace=0.07)
 plt.tight_layout()
 if save_path:
-    plt.savefig(save_path)
+    plt.savefig(save_path, dpi=300)
 plt.show()
 

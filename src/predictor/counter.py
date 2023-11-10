@@ -17,7 +17,7 @@ from dataclasses import dataclass
 @dataclass
 class ModelsPaths():
     yolov8 = {
-        'yolov8n': r'../../data/models/yolov8/yolov8n.pt',
+        'yolov8n': r'../data/models/yolov8/yolov8n.pt',
         'yolov8s': r'../../data/models/yolov8/yolov8s.pt',
         'yolov8m': r'../../data/models/yolov8/yolov8m.pt',
         'yolov8l': r'../../data/models/yolov8/yolov8l.pt',

@@ -7,8 +7,8 @@ from scipy.interpolate import interp2d
 import warnings
 warnings.filterwarnings('ignore')
 
-metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(detr-resnet-50)(g=0.2-0.5)(r=0.5-0.5)(c=0.5-0.85)(s=130)(seed=1011)\*')
-model_name = 'detr-resnet-50'
+metrics_paths = glob(r'F:\TCC\contagem-larvas\results\metrics\(yolov8n-yolov8s-yolov8m-yolov8l-yolov8x)(g=0.3-0.45)(r=0.5-0.5)(c=0.3-0.55)(s=130)(seed=1011)\*')
+model_name = 'yolov8m'
 x_axis = 'grid_scale'
 y_axis = 'confiance'
 MAE_weight = 1
@@ -67,22 +67,26 @@ def plot_ax(idx, x, y, z, scale, title):
         origin='lower',
         aspect='auto',
         cmap='hot')
+    if x_axis == 'grid_scale':
+        x_label = 'Escala de Tiling'
+    if y_axis == 'confiance':
+        y_label = 'Confiança'
     axs[idx].scatter(x, y, 400, facecolors='none')
     axs[idx].set_title(title, fontsize=15)
     axs[idx].set_xticklabels(x, fontsize=15)
     axs[idx].set_xticks(x)
     axs[idx].set_yticklabels(y, fontsize=15)
     axs[idx].set_yticks(y)
-    axs[idx].set_xlabel(x_axis, fontsize=18)
+    axs[idx].set_xlabel(x_label, fontsize=18)
     if idx == 0:
-        axs[idx].set_ylabel(y_axis, fontsize=18)
+        axs[idx].set_ylabel(y_label, fontsize=18)
     
 if img_show:
     fig, axs = plt.subplots(1, 3, figsize=(12, 6))
     plot_ax(0, x, y, z_mae, img_resize_scale, 'MAE')
     plot_ax(1, x, y, z_mape, img_resize_scale, 'MAPE')
     plot_ax(2, x, y, z_rmse, img_resize_scale, 'RMSE')
-    fig.suptitle(f"{model_name} ({y_axis} x {x_axis})", fontsize=20)
+    fig.suptitle(f"{model_name}", fontsize=20)
     plt.tight_layout()
     plt.show()
 
