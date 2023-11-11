@@ -15,6 +15,7 @@ class Image:
     
     @staticmethod
     def show_pillow(image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         PIL.Image.fromarray(image).show()
 
     @staticmethod

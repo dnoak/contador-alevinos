@@ -8,9 +8,7 @@ import cv2
 from pathlib import Path
 
 class YoloAnnotation:
-    def __init__(self):
-        pass
-
+    @staticmethod
     def plot_xcycwh(self, annotation, image):
         for square in annotation:
             xc = square[1] * image.shape[1]
@@ -22,14 +20,16 @@ class YoloAnnotation:
             cv2.rectangle(image, pt1, pt2, (0, 0, 255), 2)
         return image
     
-    def read_txt_annotation(self, annotation_path):
+    @staticmethod
+    def read_txt_annotation(annotation_path) -> list:
         with open(annotation_path, 'r') as file:
             annotation = file.readlines()
         annotation = [line.strip().split() for line in annotation]
         annotation = list(map(lambda x: [int(x[0]), *map(float, x[1:])], annotation))
         return annotation
     
-    def coordinates_to_yolo(self, coordinates, image_shape, side_in_pixels=20):
+    @staticmethod
+    def coordinates_to_yolo(coordinates, image_shape, side_in_pixels=20):
         yolo_annotations = []
         for x, y in coordinates:
             xc = x / image_shape[1]
@@ -39,7 +39,8 @@ class YoloAnnotation:
             yolo_annotations.append([0, xc, yc, width, height])
         return yolo_annotations
     
-    def points_annotations_to_yolo(self, points_annotations, size=None, side_in_pixels=20):
+    @staticmethod
+    def points_annotations_to_yolo(points_annotations, size=None, side_in_pixels=20):
         if isinstance(points_annotations, str):
             with open(points_annotations, 'r') as file:
                 annotations = json.load(file)
@@ -56,7 +57,8 @@ class YoloAnnotation:
             yolo_annotations.append([0, xc, yc, width, height])
         return yolo_annotations
     
-    def save_yolo_annotation(self, yolo_annotation, file_name):
+    @staticmethod
+    def save_yolo_annotation(yolo_annotation, file_name):
         if Path(file_name).parents[0].exists() == False:
             Path(file_name).parents[0].mkdir(parents=True, exist_ok=True)
         with open(file_name, 'w') as txt:
@@ -65,7 +67,8 @@ class YoloAnnotation:
                 xc_yc_w_h = ' '.join([str(a) for a in annotation[1:]])
                 txt.write(f"{yclass} {xc_yc_w_h}\n")
     
-    def xcycwh_to_xyxy(self, annotation, image_shape):
+    @staticmethod
+    def xcycwh_to_xyxy(annotation, image_shape):
         for rectangle in annotation:
             xc = rectangle[1] * image_shape[1]
             yc = rectangle[2] * image_shape[0]
@@ -77,7 +80,8 @@ class YoloAnnotation:
             rectangle[4] = int(yc + height)
         return annotation
 
-    def xyxy_to_xcycwh(self, annotation, image_shape):
+    @staticmethod
+    def xyxy_to_xcycwh(annotation, image_shape):
         for rectangle in annotation:
             _, x1, y1, x2, y2 = rectangle
             xc = ((x1 + x2) / 2) / image_shape[1]
@@ -90,7 +94,8 @@ class YoloAnnotation:
             rectangle[4] = height
         return annotation
 
-    def crop_xyxy_annotation(self, xyxy_crop, annotation, image):
+    @staticmethod
+    def crop_xyxy_annotation(xyxy_crop, annotation):
         x1, y1, x2, y2 = xyxy_crop
         
         intersected_annotations = list(filter(
@@ -111,13 +116,13 @@ class YoloAnnotation:
             cropped_annotations.append([class_, xc1, yc1, xc2, yc2])
         return cropped_annotations
 
-    
+    @staticmethod
     def grid_crop(
-            self, image_path, annotation_path,
+            image_path, annotation_path,
             round_floor=True, grid_size=640):
         image = cv2.imread(image_path)
-        annotation = self.read_txt_annotation(annotation_path)
-        annotation = self.xcycwh_to_xyxy(annotation, image.shape)
+        annotation = YoloAnnotation.read_txt_annotation(annotation_path)
+        annotation = YoloAnnotation.xcycwh_to_xyxy(annotation, image.shape)
 
         if round_floor: round_fn = math.floor
         else: round_fn = math.ceil
@@ -128,14 +133,11 @@ class YoloAnnotation:
                 x1, y1 = x * grid_size, y * grid_size
                 x2, y2 = x1 + grid_size, y1 + grid_size
 
-                cropped_xyxy_annotation = self.crop_xyxy_annotation(
+                cropped_xyxy_annotation = YoloAnnotation.crop_xyxy_annotation(
                     [x1, y1, x2, y2], annotation, image)
-                cropped_xcycwh_annotation = self.xyxy_to_xcycwh(
+                cropped_xcycwh_annotation = YoloAnnotation.xyxy_to_xcycwh(
                     cropped_xyxy_annotation, (grid_size, grid_size))
                 
-                #im = self.plot_xcycwh(cropped_xcycwh_annotation, image[y1:y2, x1:x2])
-                #Image.show(im, max_res=1000)
-
                 crop.append({
                     'image': image[y1:y2, x1:x2],
                     'xcycwh': cropped_xcycwh_annotation,
@@ -143,20 +145,21 @@ class YoloAnnotation:
                 })
         return crop
     
+    @staticmethod
     def grid_crop_dataset(
-            self, images_path, annotations_path, save_path,
+            images_path, annotations_path, save_path,
             ignore_empty_crop=True, round_floor=True, grid_size=640):
         images_path = glob(f"{images_path}/*")
         annotations_path = glob(f"{annotations_path}/*")
 
         for image_path, annotation_path in (zip(images_path, annotations_path)):
-            cropped = self.grid_crop(image_path, annotation_path, round_floor, grid_size)
+            cropped = YoloAnnotation.grid_crop(image_path, annotation_path, round_floor, grid_size)
             for crop in cropped:
                 if ignore_empty_crop and len(crop['xcycwh']) == 0:
                     continue
                 filename = Path(image_path).stem
                 Image.save( crop['image'], f"{save_path}/images/{filename}_{crop['index']}.jpg")
-                self.save_yolo_annotation(crop['xcycwh'], f"{save_path}/labels/{filename}_{crop['index']}.txt")
+                YoloAnnotation.save_yolo_annotation(crop['xcycwh'], f"{save_path}/labels/{filename}_{crop['index']}.txt")
 
         
 if __name__ == '__main__':

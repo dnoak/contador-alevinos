@@ -1,0 +1,182 @@
+{
+    "yolov8l": {
+        "model_name": "yolov8l",
+        "MAE": 2.4,
+        "MAPE": 2.718092767854498,
+        "RMSE": 3.521363372331802,
+        "pred": [
+            71,
+            92,
+            94,
+            113,
+            117,
+            92,
+            91,
+            93,
+            95,
+            122
+        ],
+        "real": [
+            64,
+            99,
+            96,
+            113,
+            121,
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/train/yolov8l_0.4g_0.3r_0.5c_alls.json",
+        "args": {
+            "model_name": "yolov8l",
+            "grid_scale": 0.4,
+            "confiance": 0.5,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/train"
+        }
+    },
+    "yolov8n": {
+        "model_name": "yolov8n",
+        "MAE": 2.6,
+        "MAPE": 3.1574802811470084,
+        "RMSE": 3.794733192202055,
+        "pred": [
+            74,
+            100,
+            92,
+            110,
+            119,
+            90,
+            93,
+            93,
+            97,
+            120
+        ],
+        "real": [
+            64,
+            99,
+            96,
+            113,
+            121,
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/train/yolov8n_0.5g_0.3r_0.4c_alls.json",
+        "args": {
+            "model_name": "yolov8n",
+            "grid_scale": 0.5,
+            "confiance": 0.4,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/train"
+        }
+    },
+    "yolov8x": {
+        "model_name": "yolov8x",
+        "MAE": 3.0,
+        "MAPE": 3.554933252019192,
+        "RMSE": 4.09878030638384,
+        "pred": [
+            74,
+            94,
+            96,
+            117,
+            123,
+            92,
+            94,
+            90,
+            94,
+            120
+        ],
+        "real": [
+            64,
+            99,
+            96,
+            113,
+            121,
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/train/yolov8x_0.4g_0.3r_0.4c_alls.json",
+        "args": {
+            "model_name": "yolov8x",
+            "grid_scale": 0.4,
+            "confiance": 0.4,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/train"
+        }
+    },
+    "yolov8m": {
+        "model_name": "yolov8m",
+        "MAE": 3.4,
+        "MAPE": 3.9739117884554913,
+        "RMSE": 4.604345773288535,
+        "pred": [
+            74,
+            93,
+            98,
+            115,
+            125,
+            93,
+            97,
+            89,
+            96,
+            120
+        ],
+        "real": [
+            64,
+            99,
+            96,
+            113,
+            121,
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/train/yolov8m_0.4g_0.3r_0.4c_alls.json",
+        "args": {
+            "model_name": "yolov8m",
+            "grid_scale": 0.4,
+            "confiance": 0.4,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/train"
+        }
+    }
+}

@@ -1,0 +1,67 @@
+from glob import glob
+from pathlib import Path
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+
+metrics_paths_train = glob(r'..\..\results\best_params\all_models_train\*txt')
+metrics_paths_test = glob(r'..\..\results\best_params\all_models_test\*txt')
+
+metric = 'mape'
+fontsize = 13.5
+
+save_path = Path(r'..\..\results\graphics\\') / f"train_and_test_{metric}.png"
+
+def search_in_lines(lines, key, maxsplit, position):
+    return {
+        'total': float([i for i in lines if key in i][0].split(maxsplit=maxsplit)[position]),
+        'values': eval([i for i in lines if key in i][0].split(maxsplit=maxsplit)[position+1]),
+    }
+def get_txt_metrics(path):
+    with open(path, 'r') as f:
+        metrics = f.read().splitlines()
+    metrics = {
+        'model_name': Path(path).stem.split('_')[0],
+        'pred': search_in_lines(metrics, 'pred', 2, 1),
+        'real': search_in_lines(metrics, 'real', 2, 1),
+        'mae':  search_in_lines(metrics, 'MAE',  2, 1),
+        'mape': search_in_lines(metrics, 'MAPE', 2, 1),
+    }
+    return metrics
+
+def plot_std_ax(ax, x, y, x_label, y_label):
+    data = np.array([1-yi/xi for xi, yi in zip(x, y)], dtype=np.float64)
+    print(data)
+    #data[data < 0] = - data**2
+    #data[data > 0] = data**2
+    print(x, y)
+
+    mu = np.mean(data)
+    sigma = np.std(data)
+    normal = lambda x: np.random.default_rng().normal(loc=mu, scale=sigma, size=len(data))
+    fig, ax = plt.subplots()
+    n, bins, patches = ax.hist(data, bins=30, density=True)
+
+    hist = ((1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-0.5 * (1 / sigma * (bins - mu))**2))
+    ax.plot(bins, hist, '--')
+    ax.set_xlabel('Value')
+    ax.set_ylabel('Probability density')
+    ax.set_title('Histogram of normal distribution sample: '
+                fr'$\mu={mu:.0f}$, $\sigma={sigma:.0f}$')
+
+
+
+metrics_test = list(map(get_txt_metrics, metrics_paths_test))
+metrics_train = list(map(get_txt_metrics, metrics_paths_train))
+[print(m['model_name']) for m in metrics_test]
+
+fig, ax = plt.subplots(1, 1)
+fig.tight_layout()
+
+plot_std_ax(
+    ax,
+    metrics_test[2]['real']['values'], 
+    metrics_test[2]['pred']['values'],
+    'train', 'test')
+plt.show()

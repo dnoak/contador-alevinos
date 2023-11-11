@@ -1,0 +1,45 @@
+{
+    "model_name": "yolov8m",
+    "MAE": 23.3,
+    "MAPE": 23.490921182656187,
+    "RMSE": 26.02498799231231,
+    "pred": [
+        56,
+        49,
+        75,
+        85,
+        100,
+        79,
+        74,
+        56,
+        79,
+        100
+    ],
+    "real": [
+        64,
+        99,
+        96,
+        113,
+        121,
+        93,
+        91,
+        93,
+        96,
+        120
+    ],
+    "save_path": "..\\..\\results\\params_comparison/run_0/train/yolov8m_0.4g_0.3r_0.6c_alls.json",
+    "args": {
+        "model_name": "yolov8m",
+        "grid_scale": 0.4,
+        "confiance": 0.6,
+        "resize_scale": 0.3,
+        "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_images",
+        "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\10_labels",
+        "random_seed": 1010,
+        "data_augmentation": false,
+        "samples": "all",
+        "show_image": false,
+        "verbose": false,
+        "save_path": "..\\..\\results\\params_comparison/run_0/train"
+    }
+}
