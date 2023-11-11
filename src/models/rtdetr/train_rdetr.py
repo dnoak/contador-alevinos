@@ -3,7 +3,7 @@ from datetime import datetime
 
 def train(model):
     alevino_model = RTDETR(model)
-    train_data = r'F:\TCC\contagem-larvas\data\datasets\train\yolov8_640x640_train=2689_val=676\data.yaml'
+    train_data = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\yolo\data.yaml'
     time = datetime.now().strftime(r'%Y-%m-%d_%H-%M-%S')
     print(time)
     results = alevino_model.train(
@@ -13,7 +13,7 @@ def train(model):
         batch=8,
         workers=1,
         pretrained=True,
-        project=f'runs/detect',
+        project=r'C:\Users\Luiz\Documents\TCC\contador-alevinos\src\models\rtdetr\runs\detect',
         name=model.split('.')[0] + '_' + time,
     )
 
