@@ -1,7 +1,6 @@
 from ultralytics import YOLO
 from datetime import datetime
 
-project_path = r'D:/Documentos/Projetos/tcc/contagem-ovos-larvas-peixe/'
 
 def train(model):
     alevino_model = YOLO(model)
@@ -15,7 +14,7 @@ def train(model):
         batch=-1, 
         workers=1,
         pretrained=True,
-        project=f'{project_path}/runs/detect',
+        project=f'/runs/detect',
         name=model.split('.')[0] + '_' + time,
     )
 

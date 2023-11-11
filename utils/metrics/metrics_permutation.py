@@ -23,16 +23,16 @@ test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 args = {
     'model_name': ['deformable-detr'],
-    'grid_scale': [0.2, 0.3, 0.4, 0.5],
+    'grid_scale': [0.3], #[0.2, 0.3, 0.4, 0.5],
     'resize_scale': [0.5],
-    'confiance': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+    'confiance': [0.3], #[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
     'data_augmentation': [True],
     'random_seed': [1011],
     'samples': ['all'],
     'images_folder': [train_val_130_img],
     'annotations_folder': [train_val_130_ann], 
-    'show_image': [False],
-    'verbose': [False],
+    'show_image': [True],
+    'verbose': [True],
 }
 
 max_g, min_g = args['grid_scale'][-1], args['grid_scale'][0]
@@ -161,7 +161,6 @@ class MetricsComparison:
             if self.show_image:
                 image_annotated = im.base64_to_numpy(result['annotated_image'])
                 im.show_pillow(image_annotated)
-                input()
 
         x, y = zip(*sorted(zip(real, MAPE), key=lambda x: x[0]))
 
