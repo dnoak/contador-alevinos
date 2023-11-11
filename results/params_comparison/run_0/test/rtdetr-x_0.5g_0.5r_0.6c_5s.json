@@ -1,0 +1,35 @@
+{
+    "model_name": "rtdetr-x",
+    "MAE": 5.8,
+    "MAPE": 4.616413215969677,
+    "RMSE": 10.816653826391969,
+    "pred": [
+        93,
+        41,
+        144,
+        95,
+        49
+    ],
+    "real": [
+        93,
+        43,
+        168,
+        97,
+        48
+    ],
+    "save_path": "..\\..\\results\\params_comparison/run_0/test/rtdetr-x_0.5g_0.5r_0.6c_5s.json",
+    "args": {
+        "model_name": "rtdetr-x",
+        "grid_scale": 0.5,
+        "confiance": 0.6,
+        "resize_scale": 0.5,
+        "images_path": "..\\..\\data\\datasets\\full_yolo\\test\\images",
+        "annotations_path": "..\\..\\data\\datasets\\full_yolo\\test\\labels",
+        "random_seed": 1010,
+        "data_augmentation": false,
+        "samples": 5,
+        "show_image": false,
+        "verbose": false,
+        "save_path": "..\\..\\results\\params_comparison/run_0/test"
+    }
+}
