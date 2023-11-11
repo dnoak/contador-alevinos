@@ -120,11 +120,12 @@ class MetricsGenerator(Args):
         print(f"|-> RMSE: {np.sqrt(np.mean([self.RMSE]))}\n")
 
     def start(self):
-        samples = list(zip(glob(self.images_path+'/*'), glob(self.annotations_path+'/*')))
-        images_paths, annotations_paths = zip(*samples[:self.samples])
+        paths_sample = list(zip(glob(self.images_path+'/*'), glob(self.annotations_path+'/*')))
+        if self.samples != 'all':
+            paths_sample = random.sample(paths_sample, self.samples)
+        images_paths, annotations_paths = zip(*paths_sample)
         for index, (image, annotation) in enumerate(zip(images_paths, annotations_paths)):
             annotation = YoloAnnotation.read_txt_annotation(annotation)
-
             image = cv2.imread(image)            
             image = im.augment(image) if self.data_augmentation else image
             image = im.resize(image, self.resize_scale)
@@ -135,7 +136,7 @@ class MetricsGenerator(Args):
                 confiance=self.confiance, 
                 return_image=self.show_image
             )['total_count']
-            #red = self.fake_model(len(annotation), self.model_name)
+            #pred = self.fake_model(len(annotation), self.model_name)
             
             real = len(annotation)
             
@@ -168,24 +169,34 @@ class ComparisonPool:
     shuffle_seed: int = 1010
 
     def worker(self, paths_dict=None):
-        #comparator = None
         while self.args_permuted:
             t0 = default_timer()
             with threading.Lock():
                 args = self.args_permuted.pop()
-            #if comparator is None:
             if paths_dict is not None:
                 args |= paths_dict
             comparator = MetricsGenerator(**args)
-            #else:
-            #    comparator.set(args)
             comparator.start()
             with threading.Lock():
                 self.timers_list.append(default_timer() - t0)
                 self.remaining_args -= 1
     
     def log_progress(self):
-        ...
+        last_len = self.remaining_args
+        while self.remaining_args:
+            if last_len == self.remaining_args:
+                time.sleep(0.02)
+                continue
+            last_len = self.remaining_args
+            elapsed_time = datetime.timedelta(seconds=default_timer()-self.start_time)
+            if not self.timers_list:
+                continue
+            average_time = np.mean(self.timers_list) / self.n_workers
+            remaing_time = datetime.timedelta(seconds=average_time*self.remaining_args)
+            print(f"Comparisons: {self.total_args - self.remaining_args}/{self.total_args}")
+            print(f"Average time: {average_time}s")
+            print(f"Elapsed time: {elapsed_time}")
+            print(f"Remaining time: {remaing_time}\n")
 
     def start_threaded(self, paths_dict=None):
         self.start_time = default_timer()
@@ -207,8 +218,6 @@ class ComparisonPool:
         end_time = default_timer()
         print(f"{'#'*50}\nTotal time: {end_time - self.start_time:.2f}s")
 
-#2612648 ssp uf:ms 
-
 @dataclass(kw_only=True)
 class MetricsPlotter:
     train_metrics_path: str = None
@@ -221,7 +230,6 @@ class MetricsPlotter:
 
     @staticmethod
     def boxplot_ax(ax, errors, xlabels, ylabel, fontsize):
-        print(errors)
         ax.boxplot([*errors], widths=0.5, showfliers=False)
         normal = lambda x: np.random.normal(x, 0.06, len(errors[0]))
         ax.scatter(list(map(normal, range(1, len(errors)+1))), errors, alpha=0.5, s=20) 
@@ -302,7 +310,7 @@ class MetricsPlotter:
         fig, ax = plt.subplots(len(train), 2, figsize=(12, 16.3))
         for i, m in enumerate(train):
             MetricsPlotter.regression_ax(
-                ax[i][0],
+                ax[i][0] if len(train) > 1 else ax[0],
                 x=np.array(m['real']), y=np.array(m['pred']),
                 xy_max_label=xy_max_label,
                 model_name=m['model_name'],
@@ -311,7 +319,7 @@ class MetricsPlotter:
                 fontsize=fontsize)
         for i, m in enumerate(test):
             MetricsPlotter.regression_ax(
-                ax[i][1],
+                ax[i][1] if len(train) > 1 else ax[1],
                 x=np.array(m['real']), y=np.array(m['pred']),
                 xy_max_label=xy_max_label,
                 model_name=m['model_name'],
@@ -348,6 +356,8 @@ class MetricsComparator(ComparisonPool):
         return metrics
 
     def order_by_sum_of_normalization(self, unsorted):
+        if len(unsorted) == 1:
+            return unsorted
         mae, mape, rmse = [], [], []
         for metrics in unsorted:
             mae += [metrics['MAE']]
@@ -358,6 +368,7 @@ class MetricsComparator(ComparisonPool):
         mape_norm = (mape - np.min(mape)) / (np.max(mape) - np.min(mape))
         rmse_norm = (rmse - np.min(rmse)) / (np.max(rmse) - np.min(rmse))
         sum_norms = mae_norm + mape_norm + rmse_norm
+
         indexes = np.argsort(sum_norms)
         return [unsorted[i] for i in indexes]
 
@@ -387,14 +398,7 @@ class MetricsComparator(ComparisonPool):
         ordered_models = self.order_by_sum_of_normalization(all_models)
         os.makedirs(f"{self.test_paths_dict['save_path']}/ordered_models", exist_ok=True)
         with open(f"{self.test_paths_dict['save_path']}/ordered_models/models.json", 'w') as f:
-            json.dump(all_models, f, indent=4)
-
-
-    @staticmethod
-    def order_models_by_sum_of_normalization(self, path):
-        all_metrics = MetricsComparator.load_metrics(path)
-        for metric in all_metrics:
-            ...
+            json.dump(ordered_models, f, indent=4)
     
     def train_metrics(self):
         self.start_threaded(self.train_paths_dict)
@@ -404,7 +408,7 @@ class MetricsComparator(ComparisonPool):
         best_params = glob(f"{self.best_params_path}/*.json")
         for best_param in best_params:
             best_param = json.load(open(best_param, 'r'))['args']
-            best_param['images_path'] = self.test_paths_dict['images_path'] 
+            best_param['images_path'] = self.test_paths_dict['images_path']
             best_param['annotations_path'] = self.test_paths_dict['annotations_path']
             best_param['save_path'] = self.test_paths_dict['save_path']
             self.args_permuted += [best_param]
@@ -424,29 +428,32 @@ class MetricsComparator(ComparisonPool):
         plotter.plot_regression_real_pred(xy_max_label=330, fontsize=13.5, show=False)
      
 
-train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images'
-train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
-test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
-test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
+# train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images'
+# train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
+# test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
+# test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
+train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\10_images'
+train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\10_labels'
+test_32_img       = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\5_images'
+test_32_ann       = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\5_labels'
 
 save_path = r'..\..\results\params_comparison'
-# if os.path.exists(save_path):
-#     shutil.rmtree(save_path)
 
 args_permutator = ArgsPermutator()
 
 args_permutator.add(
-    model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
-    grid_scale=[0.5],
+    model_name=['yolov8n', 'yolov8m', 'yolov8l', 'yolov8x'],
+    resize_scale=[0.3],
+    grid_scale=[0.5, 0.4],
     confiance=[0.4, 0.5, 0.6],
-    samples=10,
-    verbose=True,
+    samples='all',
+    verbose=False,
 )
 # args_permutator.add(
-#     model_name=[*[str(i)*i for i in range(1, 10)]],
-#     grid_scale=[0.5],
+#     model_name=[*[str(i)*i for i in range(1, 3)]],
+#     grid_scale=[0.5, 0.3],
 #     confiance=[0.4, 0.5, 0.6],
-#     samples=1000,
+#     samples='all',
 # )
 
 MetricsComparator(

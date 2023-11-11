@@ -1,0 +1,142 @@
+[
+    {
+        "model_name": "yolov8l",
+        "MAE": 0.8,
+        "MAPE": 0.756720430107527,
+        "RMSE": 1.0954451150103321,
+        "pred": [
+            92,
+            91,
+            93,
+            95,
+            122
+        ],
+        "real": [
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/test/yolov8l_0.4g_0.3r_0.5c_alls.json",
+        "args": {
+            "model_name": "yolov8l",
+            "grid_scale": 0.4,
+            "confiance": 0.5,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/test"
+        }
+    },
+    {
+        "model_name": "yolov8n",
+        "MAE": 1.2,
+        "MAPE": 1.2930550632163533,
+        "RMSE": 1.6733200530681511,
+        "pred": [
+            90,
+            93,
+            93,
+            97,
+            120
+        ],
+        "real": [
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/test/yolov8n_0.5g_0.3r_0.4c_alls.json",
+        "args": {
+            "model_name": "yolov8n",
+            "grid_scale": 0.5,
+            "confiance": 0.4,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/test"
+        }
+    },
+    {
+        "model_name": "yolov8x",
+        "MAE": 1.8,
+        "MAPE": 1.9362223797707672,
+        "RMSE": 2.1447610589527217,
+        "pred": [
+            92,
+            94,
+            90,
+            94,
+            120
+        ],
+        "real": [
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/test/yolov8x_0.4g_0.3r_0.4c_alls.json",
+        "args": {
+            "model_name": "yolov8x",
+            "grid_scale": 0.4,
+            "confiance": 0.4,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/test"
+        }
+    },
+    {
+        "model_name": "yolov8m",
+        "MAE": 2.0,
+        "MAPE": 2.17889637244476,
+        "RMSE": 3.22490309931942,
+        "pred": [
+            93,
+            97,
+            89,
+            96,
+            120
+        ],
+        "real": [
+            93,
+            91,
+            93,
+            96,
+            120
+        ],
+        "save_path": "..\\..\\results\\params_comparison/run_0/test/yolov8m_0.4g_0.3r_0.4c_alls.json",
+        "args": {
+            "model_name": "yolov8m",
+            "grid_scale": 0.4,
+            "confiance": 0.4,
+            "resize_scale": 0.3,
+            "images_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_images",
+            "annotations_path": "..\\..\\data\\datasets\\train_val\\yolov8_originalres_train=130_val=0\\train\\5_labels",
+            "random_seed": 1010,
+            "data_augmentation": false,
+            "samples": "all",
+            "show_image": false,
+            "verbose": false,
+            "save_path": "..\\..\\results\\params_comparison/run_0/test"
+        }
+    }
+]
