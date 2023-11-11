@@ -1,14 +1,13 @@
-import json
-from pathlib import Path
-import shutil
 import sys
-
-from matplotlib.ticker import FuncFormatter
-from scipy import stats
 sys.path.append('../..')
 from utils.common.image_utils import Image as im
 from utils.common.yolo_utils import YoloAnnotation
-#from src.predictor.counter import CounterModel
+import json
+from pathlib import Path
+import shutil
+from matplotlib.ticker import FuncFormatter
+from scipy import stats
+from src.predictor.counter import CounterModel
 from dataclasses import dataclass, field, fields
 import datetime
 import itertools
@@ -76,16 +75,9 @@ class MetricsGenerator(Args):
 
     def __post_init__(self):
         random.seed(self.random_seed)
-        np.random.seed(self.random_seed)
-        self.model = lambda x: random.randint(-x//2, x//2) #CounterModel(model_name=self.model_name)
-
-    def set(self, args):
-        for key, value in args.items():
-            if value == getattr(self, key):
-                continue
-            setattr(self, key, value)
-        self.MAE, self.MAPE, self.RMSE = [], [], []
-        self.real, self.pred = [], []
+        np.random.seed(self.random_seed)  
+        #self.fake_model = lambda x, n: x-int(random.randint(-int(x/len(n))//2, int(x/len(n))//2))
+        self.model = CounterModel(model_name=self.model_name)
 
     def save_metrics(self):
         filename_parameters = [
@@ -101,7 +93,7 @@ class MetricsGenerator(Args):
         
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
-        
+
         metrics_dict = {
             'model_name': self.model_name,
             'MAE': self.MAE,
@@ -110,10 +102,7 @@ class MetricsGenerator(Args):
             'pred': self.pred,
             'real': self.real,
             'save_path': f"{self.save_path}/{filename}.json",
-            'args': {
-                field.name: getattr(self, field.name) 
-                for field in fields(Args)
-            },
+            'args': {field.name: getattr(self, field.name) for field in fields(Args)}
         }
 
         with open(f"{self.save_path}/{filename}.json", 'w') as f:
@@ -122,31 +111,40 @@ class MetricsGenerator(Args):
     def log_individual_metrics(self, index, error, percentual_error, squared_error):
         print(f"Model: {self.model_name} ({index + 1}/{self.samples})")
         print(f"Absolute Error: {error}")
-        print(f"Percentual Error: {percentual_error}")
+        print(f"Percentual Error: {percentual_error:.2f}")
         print(f"Squared Error: {squared_error}")
         print(f"Real: {self.real[-1]}")
         print(f"Pred: {self.pred[-1]}")
-        print(f"|-> MAE: {np.mean(self.MAE)}")
-        print(f"|-> MAPE: {np.mean(self.MAPE)}")
-        print(f"|-> RMSE: {np.sqrt(np.mean(self.RMSE))}\n")
+        print(f"|-> MAE: {np.mean([self.MAE])}")
+        print(f"|-> MAPE: {np.mean([self.MAPE])}")
+        print(f"|-> RMSE: {np.sqrt(np.mean([self.RMSE]))}\n")
 
     def start(self):
         samples = list(zip(glob(self.images_path+'/*'), glob(self.annotations_path+'/*')))
         images_paths, annotations_paths = zip(*samples[:self.samples])
         for index, (image, annotation) in enumerate(zip(images_paths, annotations_paths)):
-            #image = cv2.imread(image)            
-            #image = im.augment(image) if self.data_augmentation else image
-            #image = im.resize(image, self.resize_scale)
             annotation = YoloAnnotation.read_txt_annotation(annotation)
 
-            result = len(annotation) - self.model(x=int(len(annotation)*0.4))
-
-            self.pred.append(result)
-            self.real.append(len(annotation))
+            image = cv2.imread(image)            
+            image = im.augment(image) if self.data_augmentation else image
+            image = im.resize(image, self.resize_scale)
+            pred = self.model.count(
+                _id='dummy_id',
+                image=im.numpy_to_base64(image),
+                grid_scale=self.grid_scale, 
+                confiance=self.confiance, 
+                return_image=self.show_image
+            )['total_count']
+            #red = self.fake_model(len(annotation), self.model_name)
             
-            error = np.abs(len(annotation) - result)
+            real = len(annotation)
+            
+            self.pred.append(pred)
+            self.real.append(real)
+            
+            error = np.abs(len(annotation) - pred)
             percentual_error = error / len(annotation) * 100 
-            squared_error = np.abs(len(annotation) - result) ** 2
+            squared_error = np.abs(len(annotation) - pred) ** 2
 
             self.MAE += [error]
             self.MAPE += [percentual_error]
@@ -170,17 +168,17 @@ class ComparisonPool:
     shuffle_seed: int = 1010
 
     def worker(self, paths_dict=None):
-        comparator = None
+        #comparator = None
         while self.args_permuted:
             t0 = default_timer()
             with threading.Lock():
                 args = self.args_permuted.pop()
-            if comparator is None:
-                if paths_dict is not None:
-                    args |= paths_dict
-                comparator = MetricsGenerator(**args)
-            else:
-                comparator.set(args)
+            #if comparator is None:
+            if paths_dict is not None:
+                args |= paths_dict
+            comparator = MetricsGenerator(**args)
+            #else:
+            #    comparator.set(args)
             comparator.start()
             with threading.Lock():
                 self.timers_list.append(default_timer() - t0)
@@ -215,24 +213,17 @@ class ComparisonPool:
 class MetricsPlotter:
     train_metrics_path: str = None
     test_metrics_path: str = None
+    save_path: str = None
     
     def __post_init__(self):
-        self.train_metrics = self.load_metrics(self.train_metrics_path)
-        self.test_metrics = self.load_metrics(self.test_metrics_path)
-
-    @staticmethod
-    def load_metrics(path):
-        metrics_paths = glob(f"{path}/*.json")
-        metrics = []
-        for metric_path in metrics_paths:
-            with open(metric_path, 'r') as f:
-                metrics += [json.load(f)]
-        return metrics
+        self.train_metrics = MetricsComparator.load_metrics(self.train_metrics_path)
+        self.test_metrics = MetricsComparator.load_metrics(self.test_metrics_path)
 
     @staticmethod
     def boxplot_ax(ax, errors, xlabels, ylabel, fontsize):
+        print(errors)
         ax.boxplot([*errors], widths=0.5, showfliers=False)
-        normal = lambda x: np.random.normal(x, 0.04, len(errors[0]))
+        normal = lambda x: np.random.normal(x, 0.06, len(errors[0]))
         ax.scatter(list(map(normal, range(1, len(errors)+1))), errors, alpha=0.5, s=20) 
         ax.set_ylabel(ylabel, fontsize=fontsize)
         ax.set_yticklabels(range(0, 100, 1), fontsize=fontsize)
@@ -247,28 +238,33 @@ class MetricsPlotter:
         train = sort_metrics(self.train_metrics)
         test = sort_metrics(self.test_metrics) 
         ylabel = 'Erro Absoluto' if sort_by == 'MAE' else 'Erro Percentual Absoluto'
-        fig, ax = plt.subplots(2, 1, figsize=(15, 5))
+        mae_fn = lambda r, p: np.abs(np.array(r)-np.array(p))
+        mape_fn = lambda r, p: mae_fn(r, p) / np.array(r) * 100  
+        error_fn = mae_fn if sort_by == 'MAE' else mape_fn
+        fig, ax = plt.subplots(2, 1, figsize=(18, 10))
         MetricsPlotter.boxplot_ax(
             ax[0],
-            errors=[np.array(m['real'])-np.array(m['pred']) for m in train],
+            errors=[error_fn(m['real'], m['pred']) for m in train],
             xlabels=[f"{m['model_name']}\n({sort_by.upper()}={m[sort_by]:.2f})" for m in train],
             ylabel=f'{ylabel} (Treino)',
             fontsize=fontsize)
         MetricsPlotter.boxplot_ax(
             ax[1],
-            errors=[np.array(m['real'])-np.array(m['pred']) for m in test],
+            errors=[error_fn(m['real'], m['pred']) for m in test],
             xlabels=[f"{m['model_name']}\n({sort_by.upper()}={m[sort_by]:.2f})" for m in test],
             ylabel=f'{ylabel} (Teste)',
             fontsize=fontsize)
         plt.tight_layout()
         if show: plt.show()
+        os.makedirs(self.save_path, exist_ok=True)
+        plt.savefig(f"{self.save_path}/boxplot_{sort_by}_train_test.png")
 
     @staticmethod
     def regression_ax(ax, x, y, xy_max_label, model_name, first, last, fontsize):
         ax.scatter(x, y, alpha=0.5, s=20)
         slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
         y_regressed = intercept+slope*x
-        ax.plot(x, y_regressed, 'r', c='red')
+        ax.plot(x, y_regressed, 'r')
         ax.text(
             0.07, 0.95, f"r² = {r_value**2:.3f}",
             transform=ax.transAxes,verticalalignment='top',
@@ -297,7 +293,6 @@ class MetricsPlotter:
         if last:
             ax.xaxis.set_label_position('bottom')
             ax.xaxis.set_tick_params(labelbottom=True)
-
         ax.grid(True, which='both', linestyle='--', linewidth=0.4)
 
     def plot_regression_real_pred(self, xy_max_label, fontsize, show=False):        
@@ -325,52 +320,85 @@ class MetricsPlotter:
                 fontsize=fontsize)
         plt.tight_layout()
         if show: plt.show()
+        os.makedirs(self.save_path, exist_ok=True)
+        plt.savefig(f"{self.save_path}/regression_train_test.png")
 
 @dataclass(kw_only=True)
 class MetricsComparator(ComparisonPool):
+    save_path: str
     train_paths_dict: dict
     test_paths_dict: dict
     best_params_path: str = None
 
-    def insert_sum_of_normalization(self, model_metrics):
+    def __post_init__(self):
+        # assert not os.path.exists(self.save_path)
+        runs = glob(f"{self.save_path}/*")
+        self.save_path = f"{self.save_path}/run_{len(runs)}"
+        
+        self.train_paths_dict['save_path'] = self.save_path + '/train'
+        self.test_paths_dict['save_path'] = self.save_path + '/test'
+
+    @staticmethod
+    def load_metrics(path):
+        metrics_paths = glob(f"{path}/*.json")
+        metrics = []
+        for metric_path in metrics_paths:
+            with open(metric_path, 'r') as f:
+                metrics += [json.load(f)]
+        return metrics
+
+    def order_by_sum_of_normalization(self, unsorted):
         mae, mape, rmse = [], [], []
-        for model_metric in model_metrics:
-            mae += [model_metric['MAE']]
-            mape += [model_metric['MAPE']]
-            rmse += [model_metric['RMSE']]
-        if len(mae) + len(mape) + len(rmse) != 3:
-            mae_norm = (mae - np.min(mae)) / (np.max(mae) - np.min(mae))
-            mape_norm = (mape - np.min(mape)) / (np.max(mape) - np.min(mape))
-            rmse_norm = (rmse - np.min(rmse)) / (np.max(rmse) - np.min(rmse))
-            sum_norms = mae_norm + mape_norm + rmse_norm
-        else:
-            sum_norms = [0]
-        for model_metric, sum_norm in zip(model_metrics, sum_norms):
-            model_metric['sum_norm'] = sum_norm
-        return model_metrics
+        for metrics in unsorted:
+            mae += [metrics['MAE']]
+            mape += [metrics['MAPE']]
+            rmse += [metrics['RMSE']]
+        mae, mape, rmse = np.array(mae), np.array(mape), np.array(rmse)
+        mae_norm = (mae - np.min(mae)) / (np.max(mae) - np.min(mae))
+        mape_norm = (mape - np.min(mape)) / (np.max(mape) - np.min(mape))
+        rmse_norm = (rmse - np.min(rmse)) / (np.max(rmse) - np.min(rmse))
+        sum_norms = mae_norm + mape_norm + rmse_norm
+        indexes = np.argsort(sum_norms)
+        return [unsorted[i] for i in indexes]
 
     def save_best_train_params(self):
-        metrics_files = glob(f"{self.train_paths_dict['save_path']}/*.json")
-        all_metrics = []
-        for metric_file in metrics_files:
-            with open(metric_file.replace('.txt', '.json'), 'r') as f:
-                all_metrics += [json.load(f)]
-        models_names = set([metric['model_name'] for metric in all_metrics])
-        
-        models_metrics = {}
-        for model_name in models_names:
-            models_metrics[model_name] = [m for m in all_metrics if m['model_name'] == model_name]
-            models_metrics[model_name] = self.insert_sum_of_normalization(models_metrics[model_name])
+        all_metrics = self.load_metrics(self.train_paths_dict['save_path'])
+        metrics_ordered = self.order_by_sum_of_normalization(all_metrics)
+        metrics_by_model = {}
+        for metric in metrics_ordered:
+            if metric['model_name'] not in metrics_by_model:
+                metrics_by_model[metric['model_name']] = []
+            metrics_by_model[metric['model_name']] += [metric]
 
         os.makedirs(f"{self.train_paths_dict['save_path']}/best", exist_ok=True)
-        for key, value in models_metrics.items():
-            models_metrics[key] = sorted(value, key=lambda x: x['sum_norm'])
-            best = models_metrics[key][0]
-            shutil.copy(best['save_path'], f"{self.train_paths_dict['save_path']}/best/{key}.json")
+        best_models_ordered = {}
+        for model, models_dict in metrics_by_model.items():
+            best = models_dict[0]['save_path']
+            best_models_ordered[model] = models_dict[0]
+            shutil.copy(best, f"{self.train_paths_dict['save_path']}/best/{model}.json")
+        
+        os.makedirs(f"{self.train_paths_dict['save_path']}/best/ordered_models", exist_ok=True)
+        with open(f"{self.train_paths_dict['save_path']}/best/ordered_models/models.json", 'w') as f:
+            json.dump(best_models_ordered, f, indent=4)
         self.best_params_path = f"{self.train_paths_dict['save_path']}/best"
 
+    def save_test_best_models(self):
+        all_models = self.load_metrics(self.test_paths_dict['save_path'])
+        ordered_models = self.order_by_sum_of_normalization(all_models)
+        os.makedirs(f"{self.test_paths_dict['save_path']}/ordered_models", exist_ok=True)
+        with open(f"{self.test_paths_dict['save_path']}/ordered_models/models.json", 'w') as f:
+            json.dump(all_models, f, indent=4)
+
+
+    @staticmethod
+    def order_models_by_sum_of_normalization(self, path):
+        all_metrics = MetricsComparator.load_metrics(path)
+        for metric in all_metrics:
+            ...
+    
     def train_metrics(self):
         self.start_threaded(self.train_paths_dict)
+        self.save_best_train_params()
     
     def test_metrics(self):
         best_params = glob(f"{self.best_params_path}/*.json")
@@ -381,18 +409,19 @@ class MetricsComparator(ComparisonPool):
             best_param['save_path'] = self.test_paths_dict['save_path']
             self.args_permuted += [best_param]
         self.start_threaded()
+        self.save_test_best_models()
 
     def start(self):
         self.train_metrics()
-        best_args_folder = self.save_best_train_params()
         self.test_metrics()
         plotter = MetricsPlotter(
             train_metrics_path=self.train_paths_dict['save_path']+f'/best',
-            test_metrics_path=self.test_paths_dict['save_path']
+            test_metrics_path=self.test_paths_dict['save_path'],
+            save_path=Path(self.test_paths_dict['save_path']).parent / 'images'
         )
-        #plotter.plot_boxplot_erros(fontsize=13.5,sort_by='MAE',show=True)
-        #plotter.plot_boxplot_erros(fontsize=13.5, sort_by='MAPE', show=True)
-        plotter.plot_regression_real_pred(xy_max_label=330, fontsize=13.5, show=True)
+        plotter.plot_boxplot_erros(fontsize=13.5,sort_by='MAE',show=False)
+        plotter.plot_boxplot_erros(fontsize=13.5, sort_by='MAPE', show=False)
+        plotter.plot_regression_real_pred(xy_max_label=330, fontsize=13.5, show=False)
      
 
 train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images'
@@ -401,32 +430,34 @@ test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
 
 save_path = r'..\..\results\params_comparison'
-
+# if os.path.exists(save_path):
+#     shutil.rmtree(save_path)
 
 args_permutator = ArgsPermutator()
+
 args_permutator.add(
-    model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x', 'yolov8xx'],
-    grid_scale=[0.4],
-    confiance=[0.4],
-    samples=50,
-    #verbose=True,
+    model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
+    grid_scale=[0.5],
+    confiance=[0.4, 0.5, 0.6],
+    samples=10,
+    verbose=True,
 )
 # args_permutator.add(
-#     model_name=['rtdetr-l'],
-#     grid_scale=[0.3, 0.2],
-#     confiance=0.5,
+#     model_name=[*[str(i)*i for i in range(1, 10)]],
+#     grid_scale=[0.5],
+#     confiance=[0.4, 0.5, 0.6],
+#     samples=1000,
 # )
 
 MetricsComparator(
+    save_path=save_path,
     train_paths_dict={
         'images_path': train_val_130_img,
         'annotations_path':train_val_130_ann,
-        'save_path': save_path+'/train'
     },
     test_paths_dict={
         'images_path': test_32_img,
         'annotations_path': test_32_ann,
-        'save_path': save_path+'/test'
     },
     args_permuted=args_permutator.results(),
     n_workers=1,
