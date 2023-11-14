@@ -442,22 +442,43 @@ save_path = r'..\..\results\params_comparison'
 
 args_permutator = ArgsPermutator()
 
-# args_permutator.add(
-#     model_name=['yolov8n', 'yolov8m', 'yolov8l', 'yolov8x'],
-#     resize_scale=[0.3],
-#     grid_scale=[0.5, 0.4],
-#     confiance=[0.4, 0.5, 0.6],
-#     samples='all',
-#     verbose=False,
-# )
 args_permutator.add(
-    model_name=['rtdetr-x', 'rtdetr-l'],
-    grid_scale=[0.5],
-    confiance=[0.4, 0.5, 0.6],
-    samples=5,
+    model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
+    grid_scale=[0.2, 0.3, 0.4, 0.5],
+    confiance=[0.4, 0.45, 0.5, 0.55, 0.60],
+    samples='all',
+    data_augmentation=True,
     verbose=False,
     show_image=False
 )
+# args_permutator.add(
+#     model_name=['rtdetr-x', 'rtdetr-l'],
+#     grid_scale=[0.5],
+#     confiance=[0.4, 0.5, 0.6],
+#     samples=5,
+#     verbose=False,
+#     show_image=False
+# )
+
+args_permutator.add(
+    model_name=["rtdetr-l", "rtdetr-x", 'detr-resnet-50'],
+    grid_scale=[0.2, 0.3, 0.4, 0.5],
+    confiance=[0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    samples='all',
+    data_augmentation=True,
+    verbose=False,
+    show_image=False
+)
+args_permutator.add(
+    model_name=['deformable-detr'],
+    grid_scale=[0.2, 0.3, 0.4, 0.5],
+    confiance=[0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
+    samples='all',
+    data_augmentation=True,
+    verbose=False,
+    show_image=False
+)
+
 # args_permutator.add(
 #     model_name=[*[str(i)*i for i in range(1, 10)]],
 #     grid_scale=[0.5, 0.3],
@@ -476,6 +497,6 @@ MetricsComparator(
         'annotations_path': test_32_ann,
     },
     args_permuted=args_permutator.results(),
-    n_workers=16,
+    n_workers=12,
     shuffle_seed=1010
 ).start()

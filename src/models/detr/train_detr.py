@@ -11,12 +11,12 @@ import pytorch_lightning as pl
 import torchvision
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
-
-MODEL_PATH = r'../../models/deformable-detr' 
+MODEL_PATH = r'../../../data/models/deformable-detr'
+#MODEL_PATH = r'../../../data/models/detr-resnet-50' 
 ANNOTATION_FILE_NAME = "_annotations.coco.json"
 TRAIN_DIRECTORY = r'../../../data/datasets/coco/train'
 VAL_DIRECTORY = r'../../../data/datasets/coco/valid'
-TEST_DIRECTORY = r'../../../data/datasets/coco/teste'
+#TEST_DIRECTORY = r'../../../data/datasets/coco/teste'
 
 class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(
@@ -126,8 +126,8 @@ class ModelTrainer():
         id2label = {k: v['name'] for k,v in categories.items()}
         self.image_processor = image_processor
         self.model = Model(lr=1e-4, lr_backbone=1e-5, weight_decay=1e-4, id2label=id2label, train_dataloader=TRAIN_DATALOADER, val_dataloader=VAL_DATALOADER, CHECKPOINT=model)
-        early_stop_callback = EarlyStopping(monitor="validation/loss", patience=20)
-        checkpoint_callback = ModelCheckpoint(dirpath=r"../../../data/models", 
+        early_stop_callback = EarlyStopping(monitor="validation/loss", patience=50)
+        checkpoint_callback = ModelCheckpoint(dirpath=MODEL_PATH, 
                                               filename='best-deformable-detr-{epoch:02d}-{val_loss:.2f}',
                                               save_top_k=1, 
                                               monitor="validation/loss",
@@ -142,7 +142,7 @@ class ModelTrainer():
             callbacks=[early_stop_callback, checkpoint_callback])
     
     def train(self, model_path):
-        self.trainer.fit(self.model, ckpt_path=r"C:\Users\Luiz\Documents\TCC\contador-alevinos\data\models\best-deformable-detr-epoch=10-val_loss=0.00.ckpt")
+        self.trainer.fit(self.model)# ckpt_path=r"C:\Users\Luiz\Documents\TCC\contador-alevinos\data\models\deformable-detr\best-deformable-detr-epoch=06-val_loss=0.00.ckpt")
         self.model.model.save_pretrained(model_path)
     
     def collate_fn(self, batch):
@@ -204,7 +204,7 @@ class ModelTester():
             plt.show()
             
             
-MODEL_NAME = 'facebook/detr-resnet-50'
+#MODEL_NAME = 'facebook/detr-resnet-50'
 MODEL_NAME = 'SenseTime/deformable-detr'
 
 if (MODEL_NAME == 'SenseTime/deformable-detr'):
@@ -212,7 +212,7 @@ if (MODEL_NAME == 'SenseTime/deformable-detr'):
 else:
     image_processor = DetrImageProcessor.from_pretrained(MODEL_NAME)
     
-t = ModelTrainer(5, 10, image_processor, MODEL_NAME)
+t = ModelTrainer(5, 100, image_processor, MODEL_NAME)
 t.train(MODEL_PATH)
 
 #TEST_DATASET = CocoDetection(image_directory_path=TEST_DIRECTORY, image_processor=image_processor, train=False)
