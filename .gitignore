@@ -4,3 +4,4 @@ data/*
 **/*.pth
 **/*.ckpt
 /models
+/runs
