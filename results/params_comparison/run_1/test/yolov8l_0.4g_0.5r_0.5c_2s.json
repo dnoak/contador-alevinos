@@ -1,0 +1,29 @@
+{
+    "model_name": "yolov8l",
+    "MAE": 11.0,
+    "MAPE": 6.765463917525773,
+    "RMSE": 14.866068747318506,
+    "pred": [
+        147,
+        98
+    ],
+    "real": [
+        168,
+        97
+    ],
+    "save_path": "..\\..\\results\\params_comparison/run_1/test/yolov8l_0.4g_0.5r_0.5c_2s.json",
+    "args": {
+        "model_name": "yolov8l",
+        "grid_scale": 0.4,
+        "confiance": 0.5,
+        "resize_scale": 0.5,
+        "images_path": "..\\..\\data\\datasets\\full_yolo\\test\\images",
+        "annotations_path": "..\\..\\data\\datasets\\full_yolo\\test\\labels",
+        "random_seed": 1010,
+        "data_augmentation": true,
+        "samples": 2,
+        "show_image": false,
+        "verbose": false,
+        "save_path": "..\\..\\results\\params_comparison/run_1/test"
+    }
+}

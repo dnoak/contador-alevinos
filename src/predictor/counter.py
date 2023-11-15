@@ -21,13 +21,13 @@ class ModelsPaths():
         'yolov8s': r'../../data/models/yolov8/yolov8s.pt',
         'yolov8m': r'../../data/models/yolov8/yolov8m.pt',
         'yolov8l': r'../../data/models/yolov8/yolov8l.pt',
-        'yolov8x': r'../../data/models/yolov8/yolov8s.pt',    
+        'yolov8x': r'../../data/models/yolov8/yolov8x.pt',    
     }
     detr = {
-        'detr-resnet-50': r'../../data/models/detr/detr-resnet-50',
+        'detr-resnet-50': r'../../data/models/detr-resnet-50',
     }
     deformable_detr = {
-        'deformable-detr': r'../../data/models/deformable-detr/deformable-detr',
+        'deformable-detr': r'../../data/models/deformable-detr',
     }
     rtdetr = {
         'rtdetr-l': r'../../data/models/rtdetr/rtdetr-l.pt',

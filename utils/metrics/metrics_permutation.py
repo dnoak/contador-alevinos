@@ -21,6 +21,7 @@ import cv2
 from glob import glob
 import numpy as np
 import threading
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 @contextlib.contextmanager
 def timer(message="Time"):
@@ -135,17 +136,17 @@ class MetricsGenerator(Args):
                 grid_scale=self.grid_scale, 
                 confiance=self.confiance, 
                 return_image=self.show_image
-            )['total_count']
+            )
             #pred = self.fake_model(len(annotation), self.model_name)
             
             real = len(annotation)
             
-            self.pred.append(pred)
+            self.pred.append(pred['total_count'])
             self.real.append(real)
             
-            error = np.abs(len(annotation) - pred)
+            error = np.abs(len(annotation) - pred['total_count'])
             percentual_error = error / len(annotation) * 100 
-            squared_error = np.abs(len(annotation) - pred) ** 2
+            squared_error = np.abs(len(annotation) - pred['total_count']) ** 2
 
             self.MAE += [error]
             self.MAPE += [percentual_error]
@@ -155,7 +156,7 @@ class MetricsGenerator(Args):
                 self.log_individual_metrics(
                     index, error, percentual_error, squared_error)
             if self.show_image:
-                im.show(image)
+                im.show(im.base64_to_numpy(pred["annotated_image"]))
 
         self.MAE = np.mean(self.MAE)
         self.MAPE = np.mean(self.MAPE)
@@ -432,25 +433,54 @@ class MetricsComparator(ComparisonPool):
 # train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
 # test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 # test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
-train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\10_images'
-train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\10_labels'
-test_32_img       = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\5_images'
-test_32_ann       = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\5_labels'
+train_val_130_img = r'..\..\data\datasets\full_yolo\train_valid\images'
+train_val_130_ann = r'..\..\data\datasets\full_yolo\train_valid\labels'
+test_32_img       = r'..\..\data\datasets\full_yolo\test\images'
+test_32_ann       = r'..\..\data\datasets\full_yolo\test\labels'
 
 save_path = r'..\..\results\params_comparison'
 
 args_permutator = ArgsPermutator()
 
 args_permutator.add(
-    model_name=['yolov8n', 'yolov8m', 'yolov8l', 'yolov8x'],
-    resize_scale=[0.3],
-    grid_scale=[0.5, 0.4],
-    confiance=[0.4, 0.5, 0.6],
+    model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
+    grid_scale=[0.2, 0.3, 0.4, 0.5],
+    confiance=[0.4, 0.45, 0.5, 0.55, 0.60],
     samples='all',
+    data_augmentation=True,
     verbose=False,
+    show_image=False
 )
 # args_permutator.add(
-#     model_name=[*[str(i)*i for i in range(1, 3)]],
+#     model_name=['rtdetr-x', 'rtdetr-l'],
+#     grid_scale=[0.5],
+#     confiance=[0.4, 0.5, 0.6],
+#     samples=5,
+#     verbose=False,
+#     show_image=False
+# )
+
+args_permutator.add(
+    model_name=["rtdetr-l", "rtdetr-x", 'detr-resnet-50'],
+    grid_scale=[0.2, 0.3, 0.4, 0.5],
+    confiance=[0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    samples='all',
+    data_augmentation=True,
+    verbose=False,
+    show_image=False
+)
+args_permutator.add(
+    model_name=['deformable-detr'],
+    grid_scale=[0.2, 0.3, 0.4, 0.5],
+    confiance=[0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
+    samples='all',
+    data_augmentation=True,
+    verbose=False,
+    show_image=False
+)
+
+# args_permutator.add(
+#     model_name=[*[str(i)*i for i in range(1, 10)]],
 #     grid_scale=[0.5, 0.3],
 #     confiance=[0.4, 0.5, 0.6],
 #     samples='all',
@@ -467,6 +497,6 @@ MetricsComparator(
         'annotations_path': test_32_ann,
     },
     args_permuted=args_permutator.results(),
-    n_workers=1,
+    n_workers=12,
     shuffle_seed=1010
 ).start()

@@ -15,7 +15,7 @@ def train(model):
         batch=-1, 
         workers=1,
         pretrained=True,
-        project=f'{project_path}/runs/detect',
+        project=f'/runs/detect',
         name=model.split('.')[0] + '_' + time,
     )
 

@@ -7,9 +7,10 @@ from matplotlib.ticker import FuncFormatter
 
 #train_labels_path = glob(r'..\..\data\datasets\train_val\yolov8_640x640_train=2689_val=676\train\labels\*.txt')
 #val_labels_path   = glob(r'..\..\data\datasets\train_val\yolov8_640x640_train=2689_val=676\valid\labels\*.txt')
-train_labels_path = glob(r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels\*.txt')
-val_labels_path   = glob(r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels\*.txt')
-nbins = 16
+
+train_labels_path = glob(r'..\..\data\datasets\full_yolo\train_valid\labels\*')
+val_labels_path = glob(r'..\..\data\datasets\full_yolo\test\labels\*')
+nbins = 10
 
 def len_annotations(labels_paths):
     counts = []

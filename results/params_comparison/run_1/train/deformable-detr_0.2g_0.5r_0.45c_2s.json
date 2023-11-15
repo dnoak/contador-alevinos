@@ -1,0 +1,29 @@
+{
+    "model_name": "deformable-detr",
+    "MAE": 19.0,
+    "MAPE": 24.20062695924765,
+    "RMSE": 19.1049731745428,
+    "pred": [
+        41,
+        89
+    ],
+    "real": [
+        58,
+        110
+    ],
+    "save_path": "..\\..\\results\\params_comparison/run_1/train/deformable-detr_0.2g_0.5r_0.45c_2s.json",
+    "args": {
+        "model_name": "deformable-detr",
+        "grid_scale": 0.2,
+        "confiance": 0.45,
+        "resize_scale": 0.5,
+        "images_path": "..\\..\\data\\datasets\\full_yolo\\train_valid\\images",
+        "annotations_path": "..\\..\\data\\datasets\\full_yolo\\train_valid\\labels",
+        "random_seed": 1010,
+        "data_augmentation": true,
+        "samples": 2,
+        "show_image": false,
+        "verbose": false,
+        "save_path": "..\\..\\results\\params_comparison/run_1/train"
+    }
+}

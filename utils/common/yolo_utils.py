@@ -165,17 +165,17 @@ class YoloAnnotation:
 if __name__ == '__main__':
     import os; os.system('cls')
     ya = YoloAnnotation()
-    image_path = r'C:\Users\Luiz\Documents\TCC\contagem-ovos-larvas-peixe\images\images'
-    annotation_path = r'C:\Users\Luiz\Documents\TCC\contagem-ovos-larvas-peixe\images\labels'
+    image_path = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\valid\images'
+    annotation_path = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\valid\labels'
     
-    ya.grid_crop_dataset(image_path, annotation_path, f"data\YOLO_cropped_dataset", ignore_empty_crop=False)
+    ya.grid_crop_dataset(image_path, annotation_path, f"data\YOLO_cropped_dataset_valid", ignore_empty_crop=False)
 
     # test crop
     import numpy as np
     while True:
         random_number = np.random.randint(0, 100)
-        p1 = glob(r"C:\Users\Luiz\Documents\TCC\contagem-ovos-larvas-peixe\utils\data\YOLO_cropped_dataset\images\*")[random_number]
-        p2 = glob(r"C:\Users\Luiz\Documents\TCC\contagem-ovos-larvas-peixe\utils\data\YOLO_cropped_dataset\labels\*")[random_number]
+        p1 = glob(r"data\YOLO_cropped_dataset_valid\images\*")[random_number]
+        p2 = glob(r"data\YOLO_cropped_dataset_valid\labels\*")[random_number]
         image = cv2.imread(p1)
         annotation = ya.read_txt_annotation(p2)
         Image.show(ya.plot_xcycwh(annotation, image))
