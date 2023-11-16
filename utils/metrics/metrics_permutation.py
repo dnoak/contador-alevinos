@@ -418,6 +418,7 @@ class MetricsComparator(ComparisonPool):
 
     def start(self):
         self.train_metrics()
+        input()
         self.test_metrics()
         plotter = MetricsPlotter(
             train_metrics_path=self.train_paths_dict['save_path']+f'/best',
@@ -433,8 +434,8 @@ class MetricsComparator(ComparisonPool):
 # train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
 # test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
 # test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
-train_val_130_img = r'..\..\data\datasets\full_yolo\train_valid\images'
-train_val_130_ann = r'..\..\data\datasets\full_yolo\train_valid\labels'
+train_val_130_img = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\teste\train\images'
+train_val_130_ann = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\teste\train\labels'
 test_32_img       = r'..\..\data\datasets\full_yolo\test\images'
 test_32_ann       = r'..\..\data\datasets\full_yolo\test\labels'
 
@@ -447,7 +448,7 @@ args_permutator.add(
     grid_scale=[0.2, 0.3, 0.4, 0.5],
     confiance=[0.4, 0.45, 0.5, 0.55, 0.60],
     samples='all',
-    data_augmentation=True,
+    data_augmentation=False,
     verbose=False,
     show_image=False
 )
@@ -465,7 +466,7 @@ args_permutator.add(
     grid_scale=[0.2, 0.3, 0.4, 0.5],
     confiance=[0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
     samples='all',
-    data_augmentation=True,
+    data_augmentation=False,
     verbose=False,
     show_image=False
 )
