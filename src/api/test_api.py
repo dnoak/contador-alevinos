@@ -147,7 +147,7 @@ class TestApiContadorAlevinos:
         results = self.test_one_image(return_image=True)
         for result in results['results']:
             image = im.base64_to_numpy(result['annotated_image'])
-            im.show(image)
+            im.show_pillow(image)
     
     def test_visual_many_images(self):
         results = self.test_many_images(return_image=True)
@@ -160,7 +160,6 @@ class TestApiContadorAlevinos:
         self.test_one_image()
         self.test_many_images()
         self.test_one_image_many_times()
-    
 
 tester = TestApiContadorAlevinos(
     base_url='',
@@ -171,14 +170,15 @@ tester = TestApiContadorAlevinos(
         # {'model_name': 'yolov8l'},
         # {'model_name': 'yolov8x'},
         {'model_name': 'yolov8n'},
-        {'model_name': 'detr'},
-        {'model_name': 'rtdetr-l'},
+        #{'model_name': 'detr'},
+        #{'model_name': 'rtdetr-l'},
     ],
-    random_images_path=glob(r'..\..\data\datasets\train\yolov8_640x640_train=2689_val=676\valid\images\*'),
-    random_grid_scales=[0.35],
+    random_images_path=glob(r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images\*'),
+    random_grid_scales=[0.4],
     random_confiances=[0.5]
 )
 
 for _ in range(10):
-    tester.test_all()
+    tester.test_visual_one_image()
+    input()
 
