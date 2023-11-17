@@ -213,7 +213,10 @@ class CounterModel():
             x0_img, y0_img = grid['grid_xyxy'][:2]
             xyxy = np.array(grid['grid_boxes_xyxy']) + np.array([x0_img, y0_img, x0_img, y0_img])
             for x1, y1, x2, y2 in xyxy:
-                cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 1)
+                #cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 1)
+                xc, yc = (x1 + x2) // 2, (y1 + y2) // 2
+                cv2.circle(image, (xc, yc), 9, (0, 0, 0), cv2.FILLED)
+                cv2.circle(image, (xc, yc), 6, (0, 255, 0), cv2.FILLED)
         return im.numpy_to_base64(image)
 
     def count(self, _id, image, grid_scale, confiance, return_image):
