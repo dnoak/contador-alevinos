@@ -156,7 +156,8 @@ class MetricsGenerator(Args):
                 self.log_individual_metrics(
                     index, error, percentual_error, squared_error)
             if self.show_image:
-                im.show(im.base64_to_numpy(pred["annotated_image"]))
+                im.show_pillow(im.base64_to_numpy(pred["annotated_image"]))
+                input()
 
         self.MAE = np.mean(self.MAE)
         self.MAPE = np.mean(self.MAPE)
@@ -428,64 +429,59 @@ class MetricsComparator(ComparisonPool):
         plotter.plot_boxplot_erros(fontsize=13.5,sort_by='MAE',show=False)
         plotter.plot_boxplot_erros(fontsize=13.5, sort_by='MAPE', show=False)
         plotter.plot_regression_real_pred(xy_max_label=330, fontsize=13.5, show=False)
-     
 
-# train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images'
-# train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
-# test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
-# test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
-train_val_130_img = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\teste\train\images'
-train_val_130_ann = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\teste\train\labels'
-test_32_img       = r'..\..\data\datasets\full_yolo\test\images'
-test_32_ann       = r'..\..\data\datasets\full_yolo\test\labels'
+train_val_130_img = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\images'
+train_val_130_ann = r'..\..\data\datasets\train_val\yolov8_originalres_train=130_val=0\train\labels'
+test_32_img = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\images'
+test_32_ann = r'..\..\data\datasets\test\yolov8_originalres_test=32\test\labels'
+#train_val_130_img = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\teste\train\images'
+#train_val_130_ann = r'C:\Users\Luiz\Documents\TCC\contador-alevinos\data\datasets\teste\train\labels'
+#test_32_img       = r'..\..\data\datasets\full_yolo\test\images'
+#test_32_ann       = r'..\..\data\datasets\full_yolo\test\labels'
 
 save_path = r'..\..\results\params_comparison'
 
 args_permutator = ArgsPermutator()
 
-args_permutator.add(
-    model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
-    grid_scale=[0.2, 0.3, 0.4, 0.5],
-    confiance=[0.4, 0.45, 0.5, 0.55, 0.60],
-    samples='all',
-    data_augmentation=False,
-    verbose=False,
-    show_image=False
-)
 # args_permutator.add(
-#     model_name=['rtdetr-x', 'rtdetr-l'],
-#     grid_scale=[0.5],
-#     confiance=[0.4, 0.5, 0.6],
-#     samples=5,
+#     model_name=['yolov8n', 'yolov8s', 'yolov8m', 'yolov8l', 'yolov8x'],
+#     grid_scale=[0.2, 0.3, 0.4, 0.5],
+#     confiance=[0.4, 0.45, 0.5, 0.55, 0.60],
+#     samples='all',
+#     data_augmentation=False,
+#     verbose=False,
+#     show_image=False
+# )
+
+# args_permutator.add(
+#     model_name=["rtdetr-l", "rtdetr-x", 'detr-resnet-50'],
+#     grid_scale=[0.2, 0.3, 0.4, 0.5],
+#     confiance=[0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+#     samples='all',
+#     data_augmentation=False,
+#     verbose=False,
+#     show_image=False
+# )
+# args_permutator.add(
+#     model_name=['deformable-detr'],
+#     grid_scale=[0.2, 0.3, 0.4, 0.5],
+#     confiance=[0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
+#     samples='all',
+#     data_augmentation=True,
 #     verbose=False,
 #     show_image=False
 # )
 
 args_permutator.add(
-    model_name=["rtdetr-l", "rtdetr-x", 'detr-resnet-50'],
-    grid_scale=[0.2, 0.3, 0.4, 0.5],
-    confiance=[0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-    samples='all',
+    model_name=['rtdetr-x'],
+    grid_scale=[0.5],
+    confiance=[0.5],
+    resize_scale=1,
+    samples=50,
     data_augmentation=False,
-    verbose=False,
-    show_image=False
+    verbose=True,
+    show_image=True
 )
-args_permutator.add(
-    model_name=['deformable-detr'],
-    grid_scale=[0.2, 0.3, 0.4, 0.5],
-    confiance=[0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
-    samples='all',
-    data_augmentation=True,
-    verbose=False,
-    show_image=False
-)
-
-# args_permutator.add(
-#     model_name=[*[str(i)*i for i in range(1, 10)]],
-#     grid_scale=[0.5, 0.3],
-#     confiance=[0.4, 0.5, 0.6],
-#     samples='all',
-# )
 
 MetricsComparator(
     save_path=save_path,
@@ -498,6 +494,6 @@ MetricsComparator(
         'annotations_path': test_32_ann,
     },
     args_permuted=args_permutator.results(),
-    n_workers=12,
+    n_workers=1,
     shuffle_seed=1010
 ).start()
